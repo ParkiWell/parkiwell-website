@@ -93,8 +93,9 @@ test("chapter screenshots are decoded before a theme switch", async ({
 }) => {
   await page.goto("/", { waitUntil: "networkidle" });
 
-  const darkScreens = page.locator('img[src*="-dark-v2.webp"]');
-  await expect(darkScreens).toHaveCount(8);
+  // Screenshot filenames carry a content hash, so match the shape not a name.
+  const darkScreens = page.locator('img[src*="-dark-"][src*=".webp"]');
+  await expect(darkScreens).toHaveCount(10);
 
   for (let index = 0; index < (await darkScreens.count()); index += 1) {
     const screen = darkScreens.nth(index);
@@ -181,8 +182,8 @@ test("security headers are present", async ({ request }) => {
   expect(csp).toContain("default-src 'self'");
   expect(csp).toContain("frame-ancestors 'none'");
   expect(csp).toContain("object-src 'none'");
-  // The site posts nowhere, so an injected form should have no destination.
-  expect(csp).toContain("form-action 'none'");
+  // The launch list posts here; an injected form must not reach anywhere else.
+  expect(csp).toContain("form-action 'self'");
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
   expect(headers["x-frame-options"]).toBe("DENY");
@@ -239,9 +240,7 @@ test.describe("the launch list", () => {
 
     const section = page.locator("#get");
     await expect(section).toBeInViewport();
-    await expect(
-      section.getByRole("link", { name: /Tell me when it launches/ }),
-    ).toBeVisible();
+    await expect(section.getByRole("textbox")).toBeVisible();
   });
 
   test("reaches it from another page too", async ({ page }, testInfo) => {
@@ -256,64 +255,135 @@ test.describe("the launch list", () => {
     await expect(page.locator("#get")).toBeInViewport();
   });
 
-  // A mailto: link is silent on a machine with no mail client, so the address
-  // has to be readable and copyable on the page itself.
-  test("offers the address even without a mail client", async ({
-    page,
-    context,
-  }, testInfo) => {
+  test("is a real form that posts to this origin", async ({ page }) => {
     await page.goto("/#get", { waitUntil: "networkidle" });
-    const section = page.locator("#get");
+    const form = page.locator("#get form");
 
+    // It has to work with no JavaScript as well, which means a real action.
+    await expect(form).toHaveAttribute("action", "/api/launch-list");
+    await expect(form).toHaveAttribute("method", "post");
+    await expect(form.getByRole("textbox")).toHaveAttribute("type", "email");
     await expect(
-      section.getByRole("link", { name: /Tell me when it launches/ }),
-    ).toHaveAttribute("href", /^mailto:.+@.+\?subject=/);
-    const address = section.locator('a[href^="mailto:"]').last();
-    await expect(address).toHaveText(/@/);
-
-    test.skip(
-      testInfo.project.name !== "desktop",
-      "clipboard permissions are a desktop check",
-    );
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await section.getByRole("button", { name: "Copy address" }).click();
-    await expect(
-      section.getByRole("button", { name: "Copied" }),
+      form.getByRole("button", { name: /Join the launch list/ }),
     ).toBeVisible();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
-      "@",
+
+    // The address is still on the page, so the list is reachable even if the
+    // endpoint is down.
+    await expect(page.locator('#get a[href^="mailto:"]')).toBeVisible();
+  });
+
+  // Filled in only by something that cannot see the page.
+  test("carries a trap no person can reach", async ({ page }) => {
+    await page.goto("/#get", { waitUntil: "networkidle" });
+    const trap = page.locator('#get input[name="company"]');
+
+    await expect(trap).toHaveCount(1);
+    await expect(trap).toBeHidden();
+    await expect(trap).toHaveAttribute("tabindex", "-1");
+    await expect(trap).toHaveAttribute("aria-hidden", "true");
+  });
+
+  test("says so when the list cannot take the address", async ({ page }) => {
+    await page.goto("/#get", { waitUntil: "networkidle" });
+    // Past the window that turns away a script driving the form instantly.
+    await page.waitForTimeout(600);
+    await page.locator("#get form").getByRole("textbox").fill("reader@example.com");
+    await page.locator("#get form").getByRole("button").click();
+
+    // The test server runs without Supabase credentials, so this is the
+    // degraded path: it must name the fallback rather than fail silently.
+    await expect(page.locator("#get").getByRole("alert")).toContainText(
+      /Email .+@.+/,
+    );
+  });
+
+  test("turns away an address that is not one", async ({ page }) => {
+    await page.goto("/#get", { waitUntil: "networkidle" });
+    // Past the window that turns away a script driving the form instantly.
+    await page.waitForTimeout(600);
+    await page.locator("#get form").getByRole("textbox").fill("not-an-address");
+    await page.locator("#get form").getByRole("button").click();
+
+    await expect(page.locator("#get").getByRole("alert")).toContainText(
+      /does not look/,
     );
   });
 });
 
-test.describe("scroll snapping", () => {
-  // Proximity settles the page onto a chapter you have already stopped near.
-  // Mandatory would drag you onto one whether you meant to stop or not, which
-  // on a site read by people with a movement disorder is a trap, not a polish.
-  test("stays proximity, and switches off for reduced motion", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await page.goto("/");
-    // Engines drop `proximity` from the computed value because it is the
-    // default strictness. `mandatory` is the one that would show up here.
-    expect(
-      await page.evaluate(
-        () => getComputedStyle(document.documentElement).scrollSnapType,
-      ),
-    ).toMatch(/^y( proximity)?$/);
-    await context.close();
+test.describe("the launch list endpoint", () => {
+  test("rejects what is not an address", async ({ request }) => {
+    const response = await request.post("/api/launch-list", {
+      headers: { accept: "application/json" },
+      data: { email: "nope", startedAt: 1 },
+    });
+    expect(response.status()).toBe(400);
+    expect((await response.json()).state).toBe("invalid");
+  });
 
-    const still = await browser.newContext({ reducedMotion: "reduce" });
-    const stillPage = await still.newPage();
-    await stillPage.goto("/");
-    expect(
-      await stillPage.evaluate(
+  // A caught bot must not learn that it was caught.
+  test("answers a filled trap exactly like a success", async ({ request }) => {
+    const response = await request.post("/api/launch-list", {
+      headers: { accept: "application/json" },
+      data: { email: "bot@example.com", company: "Acme", startedAt: 1 },
+    });
+    expect(response.status()).toBe(200);
+    expect((await response.json()).state).toBe("ok");
+  });
+
+  test("answers an instant submission the same way", async ({ request }) => {
+    const response = await request.post("/api/launch-list", {
+      headers: { accept: "application/json" },
+      data: { email: "fast@example.com", startedAt: Date.now() },
+    });
+    expect((await response.json()).state).toBe("ok");
+  });
+
+  test("is write only", async ({ request }) => {
+    const response = await request.get("/api/launch-list");
+    expect(response.status()).toBe(405);
+  });
+
+  test("a form post with no JavaScript comes back to the list", async ({
+    request,
+  }) => {
+    const response = await request.post("/api/launch-list", {
+      form: { email: "reader@example.com" },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    // Relative, so it always sends the visitor back to the host they came
+    // from rather than whatever hostname the server thinks it has.
+    expect(response.headers()["location"]).toBe("/?launch=unavailable#get");
+  });
+});
+
+test.describe("scroll gravity", () => {
+  // The pull is JavaScript on a pointer device and native snapping on touch.
+  // Neither runs when the visitor has asked for less movement.
+  test("touch gets native snapping, and stillness gets neither", async ({
+    browser,
+  }, testInfo) => {
+    const snap = async (options: Parameters<typeof browser.newContext>[0]) => {
+      const context = await browser.newContext(options);
+      const page = await context.newPage();
+      await page.goto("/");
+      const value = await page.evaluate(
         () => getComputedStyle(document.documentElement).scrollSnapType,
-      ),
-    ).toBe("none");
-    await still.close();
+      );
+      await context.close();
+      return value;
+    };
+
+    if (testInfo.project.name === "mobile") {
+      expect(await snap({ ...testInfo.project.use })).toMatch(
+        /^y( proximity)?$/,
+      );
+    } else {
+      expect(await snap({})).toBe("none");
+    }
+    expect(await snap({ ...testInfo.project.use, reducedMotion: "reduce" })).toBe(
+      "none",
+    );
   });
 
   test("a long scroll is never held back", async ({ page }, testInfo) => {
@@ -321,104 +391,125 @@ test.describe("scroll snapping", () => {
     await page.goto("/", { waitUntil: "networkidle" });
 
     for (let i = 0; i < 14; i += 1) await page.mouse.wheel(0, 900);
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
 
     const { scrolled, furthest } = await page.evaluate(() => ({
       scrolled: window.scrollY,
-      furthest: document.body.scrollHeight - window.innerHeight,
+      furthest: document.documentElement.scrollHeight - window.innerHeight,
     }));
     expect(scrolled, "reaches the end of the page in one go").toBeGreaterThan(
       furthest * 0.9,
     );
   });
 
-  test("resting between chapters is allowed to stay there", async ({
-    page,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "desktop", "one viewport is enough");
+  // The end of the page is somewhere you are allowed to be. Without this the
+  // last chapter's pull wins and quietly drags the footer back off screen.
+  test("the end of the page is a place to stop", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "gravity is pointer only");
     await page.goto("/", { waitUntil: "networkidle" });
 
-    // The widest gap between two snap points: as far from either as the page
-    // allows, which is where mandatory snapping would drag you off.
-    const target = await page.evaluate(() => {
-      const tops = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-snap]"),
-      )
-        .map((element) => element.getBoundingClientRect().top + window.scrollY)
-        .sort((a, b) => a - b);
-      let widest = { at: 0, size: 0 };
-      for (let i = 1; i < tops.length; i += 1) {
-        const size = tops[i] - tops[i - 1];
-        if (size > widest.size) {
-          widest = { at: Math.round((tops[i] + tops[i - 1]) / 2), size };
-        }
-      }
-      return widest.at;
+    const furthest = await page.evaluate(
+      () => document.documentElement.scrollHeight - window.innerHeight,
+    );
+    await page.evaluate(
+      (top) => window.scrollTo({ top, behavior: "instant" }),
+      furthest - 40,
+    );
+    await page.mouse.wheel(0, 120);
+    await page.waitForTimeout(2000);
+
+    expect(await page.evaluate(() => window.scrollY)).toBe(furthest);
+    await expect(page.locator("footer")).toBeInViewport();
+  });
+
+  test("drifts onto a chapter rather than jumping to it", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "gravity is pointer only");
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.waitForTimeout(600);
+
+    const privacy = await page.evaluate(() => {
+      const box = document
+        .querySelector("#privacy")!
+        .getBoundingClientRect();
+      return Math.round(
+        box.top + window.scrollY + box.height / 2 - window.innerHeight / 2,
+      );
     });
 
     await page.evaluate(
       (top) => window.scrollTo({ top, behavior: "instant" }),
-      target,
+      privacy - 170,
     );
-    await page.waitForTimeout(1400);
-    expect(await page.evaluate(() => window.scrollY)).toBe(target);
+    await page.mouse.wheel(0, 100);
+
+    const trace = await page.evaluate(
+      () =>
+        new Promise<number[]>((resolve) => {
+          const seen: number[] = [];
+          const started = performance.now();
+          const tick = () => {
+            seen.push(Math.round(window.scrollY));
+            if (performance.now() - started < 1800) requestAnimationFrame(tick);
+            else resolve(seen);
+          };
+          tick();
+        }),
+    );
+
+    // Arrives, over many frames rather than one, and gives a little at the end.
+    expect(trace.at(-1)).toBe(privacy);
+    expect(new Set(trace).size, "moves across many frames").toBeGreaterThan(15);
+    expect(Math.max(...trace), "overshoots before settling").toBeGreaterThan(
+      privacy,
+    );
   });
 
-  test("every chapter and day step offers somewhere to settle", async ({
+  test("yields to the visitor mid settle", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "gravity is pointer only");
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.waitForTimeout(600);
+
+    await page.evaluate(() => window.scrollTo({ top: 1200, behavior: "instant" }));
+    await page.waitForTimeout(140); // the settle is now under way
+    await page.mouse.wheel(0, 600);
+    const interrupted = await page.evaluate(() => window.scrollY);
+    await page.waitForTimeout(120);
+
+    // Whatever happens next, the wheel took effect rather than being undone.
+    expect(interrupted).toBeGreaterThan(1200);
+  });
+
+  test("the day step buttons come to rest where the steps settle", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
     await page.goto("/", { waitUntil: "networkidle" });
-
-    const points = await page.evaluate(() =>
-      Array.from(document.querySelectorAll<HTMLElement>("[data-snap]"))
-        .filter((element) => element.offsetParent !== null || element.offsetTop)
-        .map((element) => ({
-          top: Math.round(element.getBoundingClientRect().top + window.scrollY),
-          chapter: element.dataset.chapter ?? "day step",
-          stop: getComputedStyle(element).scrollSnapStop,
-        })),
-    );
-
-    // Never `always`: that is what stops a fast scroll passing a chapter by.
-    expect(points.every((point) => point.stop === "normal")).toBe(true);
-    expect(points.filter((point) => point.chapter === "day step")).toHaveLength(
-      4,
-    );
-    for (const chapter of ["hero", "privacy", "future", "questions", "get"]) {
-      expect(
-        points.some((point) => point.chapter === chapter),
-        `${chapter} can be settled on`,
-      ).toBe(true);
-    }
-  });
-
-  // Clicking a step and scrolling to it have to agree, or the button leaves you
-  // somewhere the page immediately pulls you away from.
-  test("the day step buttons come to rest on the snap points", async ({
-    page,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.waitForTimeout(600);
 
     const rulers = await page.evaluate(() =>
-      Array.from(document.querySelectorAll<HTMLElement>("[data-snap]"))
-        .filter((element) => !element.dataset.chapter)
-        .map((element) =>
-          Math.round(element.getBoundingClientRect().top + window.scrollY),
-        ),
+      Array.from(
+        document.querySelectorAll<HTMLElement>('[data-settle="1.35"]'),
+      ).map((element) => {
+        const box = element.getBoundingClientRect();
+        return Math.round(
+          box.top + window.scrollY + box.height / 2 - window.innerHeight / 2,
+        );
+      }),
     );
+    expect(rulers).toHaveLength(4);
 
     for (const [index, ruler] of rulers.entries()) {
-      await page.evaluate(() =>
-        window.scrollTo({ top: 0, behavior: "instant" }),
-      );
-      await page.waitForTimeout(300);
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.waitForTimeout(400);
       await page.locator("#day button").nth(index).click();
-      await page.waitForTimeout(2200);
+      await page.waitForTimeout(2400);
       const at = await page.evaluate(() => window.scrollY);
-      expect(Math.abs(at - ruler), `step ${index + 1} rests on its snap point`)
-        .toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(at - ruler),
+        `step ${index + 1} rests where it settles`,
+      ).toBeLessThanOrEqual(2);
     }
   });
 });

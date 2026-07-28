@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Nunito_Sans } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeScript } from "@/components/theme-script";
+import { ScrollGravity } from "@/components/ui/scroll-gravity";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -68,8 +69,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f0e8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b2226" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f0e7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c1a1b" },
   ],
   colorScheme: "light dark",
 };
@@ -95,6 +96,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <ScrollProgress />
+        <ScrollGravity />
         <SiteHeader />
         <main id="main" className="flex-1">
           {children}

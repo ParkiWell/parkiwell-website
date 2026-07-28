@@ -12,6 +12,7 @@ import { ArrowRight, Check, Offline } from "@/components/icons";
 import { launchMail } from "@/components/launch-list";
 import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
+import { screens } from "@/lib/screens";
 import { useStillness } from "@/hooks/use-stillness";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -53,7 +54,7 @@ export function Hero() {
     <section
       ref={ref}
       data-chapter="hero"
-      data-snap
+      data-settle="1"
       className="chapter relative flex min-h-[100svh] overflow-hidden pt-28 sm:pt-32"
     >
       <Container className="relative flex flex-1 items-center pb-14 sm:pb-20">
@@ -164,8 +165,7 @@ export function Hero() {
             >
               <PhoneFrame>
                 <ThemedPhoneScreen
-                  lightSrc="/screens/welcome.webp"
-                  darkSrc="/screens/welcome-dark.webp"
+                  screen={screens.welcome}
                   alt="The ParkiWell welcome screen introducing daily care and guided recovery."
                   priority
                   sizes="(max-width: 639px) 272px, 336px"

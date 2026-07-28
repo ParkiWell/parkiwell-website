@@ -5,6 +5,7 @@ import { Mark } from "@/components/icons";
 import { LaunchList } from "@/components/launch-list";
 import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
+import { screens } from "@/lib/screens";
 import { useStillness } from "@/hooks/use-stillness";
 
 export function Closing() {
@@ -14,8 +15,8 @@ export function Closing() {
     <section
       id="get"
       data-chapter="get"
-      data-snap
-      className="chapter relative flex min-h-[100svh] items-center overflow-hidden py-28 text-ink"
+      data-settle="1"
+      className="chapter relative flex min-h-[88svh] items-center overflow-hidden py-24 text-ink"
     >
       <Container className="relative">
         <div className="grid items-center gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
@@ -28,23 +29,14 @@ export function Closing() {
             <p className="label flex items-center gap-3 text-ink/60">
               <Mark className="h-5 w-5" /> One more thing
             </p>
-            <h2 className="display mt-7 max-w-[8ch] text-[clamp(4rem,9vw,8.5rem)]">
+            <h2 className="display mt-6 max-w-[8ch] text-[clamp(3.6rem,8vw,7.4rem)]">
               Keep your day close.
             </h2>
-            <p className="mt-8 max-w-[36rem] text-[1.12rem] font-semibold leading-relaxed text-ink/75 sm:text-[1.25rem]">
-              ParkiWell is coming to iPhone and Android. Send a note and we will
-              let you know when it lands. Nothing else, and no one else sees the
-              address.
+            <p className="mt-7 max-w-[34rem] text-[1.12rem] font-semibold leading-relaxed text-ink/75">
+              Coming to iPhone and Android. Leave an address and we will tell
+              you the day it lands.
             </p>
-            <LaunchList className="mt-10" />
-            <div className="mt-8 flex flex-wrap gap-3 text-sm font-extrabold">
-              <span className="rounded-full border border-ink/20 px-4 py-2">
-                Coming to iPhone
-              </span>
-              <span className="rounded-full border border-ink/20 px-4 py-2">
-                Coming to Android
-              </span>
-            </div>
+            <LaunchList className="mt-9" />
           </motion.div>
 
           <motion.div
@@ -60,8 +52,7 @@ export function Closing() {
           >
             <PhoneFrame className="relative">
               <ThemedPhoneScreen
-                lightSrc="/screens/recovery.webp"
-                darkSrc="/screens/recovery-dark.webp"
+                screen={screens.recovery}
                 alt="The ParkiWell Recovery screen with a weekly goal and guided chair workout."
                 sizes="(max-width: 639px) 72vw, 368px"
               />

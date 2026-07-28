@@ -20,9 +20,8 @@ const scriptSources = [
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
-  // The site posts nowhere. Keeping this at 'none' means an injected form has
-  // no destination at all, rather than one that merely has to be same origin.
-  "form-action 'none'",
+  // The launch list posts here and nowhere else.
+  "form-action 'self'",
   "frame-ancestors 'none'",
   "frame-src 'none'",
   "child-src 'none'",

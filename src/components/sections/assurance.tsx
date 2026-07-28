@@ -38,7 +38,7 @@ export function Assurance() {
     <section
       id="privacy"
       data-chapter="privacy"
-      data-snap
+      data-settle="1"
       className="chapter relative flex min-h-[100svh] items-center overflow-hidden py-28 text-ink"
     >
       <Container className="relative">

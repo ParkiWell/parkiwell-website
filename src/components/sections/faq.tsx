@@ -48,7 +48,7 @@ export function Faq() {
     <section
       id="questions"
       data-chapter="questions"
-      data-snap
+      data-settle="1"
       className="chapter flex min-h-[100svh] items-center py-28 text-ink"
     >
       <Container>

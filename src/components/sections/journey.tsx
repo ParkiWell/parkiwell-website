@@ -14,14 +14,14 @@ import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
 import { Reveal } from "@/components/ui/reveal";
 import { stageIndex, stageOffset, stagePresence } from "@/lib/stages";
+import { screens } from "@/lib/screens";
 import { dayTrack } from "@/lib/tones";
 
 type Step = {
   label: string;
   title: string;
   body: string;
-  lightSrc: string;
-  darkSrc: string;
+  screen: (typeof screens)[keyof typeof screens];
   alt: string;
   icon: typeof Heart;
 };
@@ -31,8 +31,7 @@ const steps: Step[] = [
     label: "A quick check-in",
     title: "Notice how today feels",
     body: "See symptom and medication activity together, then add a note when you want to remember more context.",
-    lightSrc: "/screens/home.webp",
-    darkSrc: "/screens/home-dark-v2.webp",
+    screen: screens.home,
     alt: "The Home screen showing symptom activity, medication activity, and a personal pattern summary.",
     icon: Heart,
   },
@@ -40,8 +39,7 @@ const steps: Step[] = [
     label: "Medication time",
     title: "Keep the next dose close",
     body: "Schedules and doses live beside everything due today, with reminders ready when you choose to set them.",
-    lightSrc: "/screens/manage.webp",
-    darkSrc: "/screens/manage-dark-v2.webp",
+    screen: screens.manage,
     alt: "The Manage screen showing medications due today and medication tools.",
     icon: Pill,
   },
@@ -49,8 +47,7 @@ const steps: Step[] = [
     label: "A practice moment",
     title: "Move to a plan you set",
     body: "Choose weekly speech and movement goals. ParkiWell brings one focused session forward and keeps your history together.",
-    lightSrc: "/screens/recovery.webp",
-    darkSrc: "/screens/recovery-dark-v2.webp",
+    screen: screens.recovery,
     alt: "The Recovery screen showing a weekly practice goal and a chair workout ready to begin.",
     icon: Play,
   },
@@ -58,8 +55,7 @@ const steps: Step[] = [
     label: "Helpful resources",
     title: "Keep support within reach",
     body: "The Community area gathers research, educational videos, specialist links, events, helplines, and daily living guides in one place.",
-    lightSrc: "/screens/community.webp",
-    darkSrc: "/screens/community-dark-v2.webp",
+    screen: screens.community,
     alt: "The Community screen showing research, videos, specialist links, events, helplines, and daily living guides.",
     icon: Person,
   },
@@ -131,8 +127,7 @@ function StepVisual({
       className="absolute inset-0 overflow-hidden"
     >
       <ThemedPhoneScreen
-        lightSrc={item.lightSrc}
-        darkSrc={item.darkSrc}
+        screen={item.screen}
         alt={item.alt}
         sizes="336px"
       />
@@ -152,7 +147,7 @@ function StackedStep({ item, index }: { item: Step; index: number }) {
   return (
     <article
       data-chapter={`day-${index + 1}`}
-      data-snap
+      data-settle="1"
       className="chapter-flow flex min-h-[100svh] items-center text-ink"
     >
       <Container className="py-24">
@@ -161,8 +156,7 @@ function StackedStep({ item, index }: { item: Step; index: number }) {
             <div className="order-2 mx-auto w-[min(11rem,46vw)] md:w-[15rem]">
               <PhoneFrame>
                 <ThemedPhoneScreen
-                  lightSrc={item.lightSrc}
-                  darkSrc={item.darkSrc}
+                  screen={item.screen}
                   alt={item.alt}
                   sizes="(max-width: 767px) 46vw, 240px"
                 />
@@ -289,19 +283,21 @@ export function Journey() {
         style={{ height: `${TRACK_SVH}svh` }}
       >
         {/*
-          The four steps of the pinned sequence are scroll positions, not
-          elements, so there is nothing for the browser to snap to. These
-          rulers sit at the scroll offset where each step is settled and give
-          it something. They are hairlines with no paint and no content.
+          The four steps are scroll positions rather than elements, so there is
+          nothing to come to rest on. These rulers stand in. Each is one
+          viewport tall and centred on the offset where its step is settled, so
+          the gravity that centres a chapter centres a step the same way, and
+          each carries extra weight: a step should hold on a little harder than
+          the chapters either side, because there are four of them inside one.
         */}
         {steps.map((item, index) => (
           <div
-            key={`snap-${item.label}`}
+            key={`settle-${item.label}`}
             aria-hidden="true"
-            data-snap
-            className="pointer-events-none absolute inset-x-0 h-px"
+            data-settle="1.35"
+            className="pointer-events-none absolute inset-x-0 h-[100svh]"
             style={{
-              top: `${(((TRACK_SVH - 100) * settledAt(index)) / TRACK_SVH) * 100}%`,
+              top: `calc(${(((TRACK_SVH - 100) * settledAt(index)) / TRACK_SVH) * 100}% )`,
             }}
           />
         ))}
@@ -341,7 +337,7 @@ export function Journey() {
               <div className="flex h-full min-h-0 items-center justify-center">
                 <div className="w-[min(20rem,39vh)]">
                   <PhoneFrame>
-                    <div className="relative aspect-[680/1478] bg-[#f1f4fb] transition-colors duration-300 dark:bg-[#070b15]">
+                    <div className="relative aspect-[680/1477] bg-[#f1f4fb] transition-colors duration-300 dark:bg-[#070b15]">
                       {steps.map((item, index) => (
                         <StepVisual
                           key={item.label}

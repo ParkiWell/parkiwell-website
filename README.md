@@ -11,17 +11,36 @@ a broader on-device movement coach is being explored for a future release.
 - Tailwind CSS v4, with semantic colour tokens that drive light and dark themes
 - Motion for scroll-driven sequences
 - Playwright for cross-browser checks
+- Supabase for the launch list, reached only from the server
 
-Everything is statically prerendered. There is no database, no analytics, no
-tracking, and no third party request at runtime: fonts are self hosted and the
-Content Security Policy in `next.config.ts` blocks anything cross origin.
+Every page is statically prerendered. The one exception is
+`/api/launch-list`, which writes a single row to Supabase on the server so that
+the browser still makes no third party request of its own. There is no
+analytics and no tracking: fonts are self hosted and the Content Security
+Policy in `next.config.ts` blocks anything cross origin.
 
 ## Getting started
 
 ```bash
 npm install
-npm run dev            # http://localhost:3000
+cp .env.example .env.local   # optional, for the launch list
+npm run dev                  # http://localhost:3000
 ```
+
+Without Supabase credentials the launch list form reports that it is
+unavailable and points at the email address, which is the intended behaviour
+for a preview build. To wire it up, apply `supabase/launch_list.sql` to the
+project the app uses and set `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+
+Product screenshots are generated from the app repository:
+
+```bash
+node scripts/screens.mjs ../ParkiWell/marketing/raw
+```
+
+Filenames carry a content hash, so re-running it after the app's captures
+change is enough: `/screens/*` stays immutable in the cache and new artwork is
+always a new URL.
 
 ## Checks
 
@@ -41,11 +60,14 @@ src/app/                 routes: home, support, privacy, terms, sitemap, robots
 src/components/          header, footer, shared UI
 src/components/sections  home page sections, one file per section
 src/content/             privacy and terms, in Markdown, rendered at build time
-src/hooks/               reduced motion and viewport helpers
+src/app/api/             the launch list endpoint
+src/hooks/               reduced motion, scroll gravity, viewport helpers
 src/lib/stages.ts        timing for the pinned scroll sequences
 src/lib/tones.ts         the chapter tone scale, mirrored in globals.css
+src/lib/screens.ts       generated: hashed paths for the product screenshots
+supabase/                SQL for the launch list table and its policies
 public/screens/          product screenshots
-scripts/                 diagnostics for layout overflow, stage timing, weight
+scripts/                 screenshot build, and diagnostics for layout and weight
 ```
 
 ## Design notes
@@ -56,11 +78,12 @@ starts on the tone the one above it ended on, so there is no boundary to see.
 The stops are in `src/lib/tones.ts` and in `--tone-0` through `--tone-9` in
 `globals.css`, and tests keep the two copies in step.
 
-Scrolling has weight. Chapters snap into place once you come to rest near one,
-and the pinned day sequence takes a little over a screen of scrolling per step,
-so the story is walked through rather than flicked past. The snapping is
-`proximity` and never blocks a fast scroll, and it turns off completely for
-anyone who has asked for reduced motion.
+Scrolling has weight. The page waits for you to stop, then springs the rest of
+the way onto the nearest chapter, so it arrives with a little give rather than
+a click. Nothing is taken away while you are scrolling: any input cancels the
+settle, a long flick crosses the whole page, and the end of the page is a place
+you are allowed to stop. Touch keeps the browser's own snapping, and anyone who
+has asked for reduced motion gets neither.
 
 The day journey is the only pinned section with scroll-linked motion. It stops
 pinning and becomes a plain stacked story on small screens and whenever the

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import type { Screen } from "@/lib/screens";
 
-export const PHONE_ASPECT = 680 / 1478;
+export const PHONE_ASPECT = 680 / 1477;
 
 /**
  * Hardware frame for app screenshots. The frame is drawn with tokens rather
@@ -53,7 +54,7 @@ export function PhoneScreen({
       src={src}
       alt={alt}
       width={680}
-      height={1478}
+      height={1477}
       loading={eager ? "eager" : "lazy"}
       fetchPriority={urgent ? "high" : undefined}
       sizes={sizes}
@@ -71,15 +72,13 @@ export function PhoneScreen({
  * decoded images without exposing the phone canvas underneath.
  */
 export function ThemedPhoneScreen({
-  lightSrc,
-  darkSrc,
+  screen,
   alt,
   priority = false,
   sizes,
   className = "",
 }: {
-  lightSrc: string;
-  darkSrc: string;
+  screen: Screen;
   alt: string;
   priority?: boolean;
   sizes?: string;
@@ -89,7 +88,7 @@ export function ThemedPhoneScreen({
     <div className="relative isolate overflow-hidden bg-[#f1f4fb] dark:bg-[#070b15]">
       <div className="relative z-[1] opacity-100 transition-opacity duration-300 ease-out dark:opacity-0">
         <PhoneScreen
-          src={lightSrc}
+          src={screen.light}
           alt={alt}
           eager
           urgent={priority}
@@ -102,7 +101,7 @@ export function ThemedPhoneScreen({
         className="absolute inset-0 z-[2] opacity-0 transition-opacity duration-300 ease-out dark:opacity-100"
       >
         <PhoneScreen
-          src={darkSrc}
+          src={screen.dark}
           alt=""
           eager
           urgent={priority}

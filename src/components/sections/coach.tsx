@@ -63,7 +63,7 @@ export function FutureMovementCoach() {
     <section
       id="future"
       data-chapter="future"
-      data-snap
+      data-settle="1"
       className="chapter flex min-h-[68svh] items-center py-20 text-ink"
     >
       <Container>

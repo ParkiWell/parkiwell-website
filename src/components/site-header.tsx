@@ -71,28 +71,54 @@ export function SiteHeader() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  /*
+   * The header used to flicker. It hid after 24px of downward scroll and came
+   * back after 16px of upward scroll, which on a page driven by a settling
+   * spring meant it reacted to the settle itself: the bar would drop away and
+   * bounce back within a single gesture, twice per chapter.
+   *
+   * Now it stays put while you read and only gets out of the way when you are
+   * clearly travelling. It hides after most of a screen of continuous downward
+   * scrolling, comes back on a deliberate upward move, and is always present
+   * over the first screen and once you reach the end of the page. Direction
+   * changes reset the tally rather than acting on their own, so the small
+   * corrections a settle makes never add up to a decision.
+   */
   useEffect(() => {
     if (open) return;
 
-    let lastDecisionY = window.scrollY;
+    const HIDE_AFTER = Math.round(window.innerHeight * 0.75);
+    const SHOW_AFTER = 120;
+
+    let previousY = window.scrollY;
+    let travelled = 0;
     let frame = 0;
 
     const updateVisibility = () => {
-      const currentY = window.scrollY;
-      const distance = currentY - lastDecisionY;
-
-      if (currentY < 96) {
-        setHeaderHidden(false);
-        lastDecisionY = currentY;
-      } else if (distance > 24) {
-        setHeaderHidden(true);
-        lastDecisionY = currentY;
-      } else if (distance < -16) {
-        setHeaderHidden(false);
-        lastDecisionY = currentY;
-      }
-
       frame = 0;
+      const currentY = window.scrollY;
+      const step = currentY - previousY;
+      previousY = currentY;
+      if (step === 0) return;
+
+      // A change of direction starts the tally again from here.
+      if (Math.sign(step) !== Math.sign(travelled)) travelled = 0;
+      travelled += step;
+
+      const atTop = currentY < window.innerHeight * 0.9;
+      const atEnd =
+        currentY >= document.documentElement.scrollHeight - window.innerHeight - 4;
+
+      if (atTop || atEnd) {
+        setHeaderHidden(false);
+        travelled = 0;
+      } else if (travelled > HIDE_AFTER) {
+        setHeaderHidden(true);
+        travelled = 0;
+      } else if (travelled < -SHOW_AFTER) {
+        setHeaderHidden(false);
+        travelled = 0;
+      }
     };
 
     const onScroll = () => {
@@ -106,10 +132,19 @@ export function SiteHeader() {
     };
   }, [open]);
 
+  const hidden = headerHidden && !open;
+
   return (
     <header
-      className={`pointer-events-none fixed inset-x-0 top-3 z-40 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:top-4 ${
-        headerHidden && !open
+      // Tabbing into a hidden bar has to bring it back, or keyboard focus lands
+      // somewhere off the top of the screen.
+      onFocusCapture={() => setHeaderHidden(false)}
+      // The bar is only moved out of sight, never hidden from assistive tech:
+      // an `aria-hidden` element whose links stay tabbable is worse than either
+      // on its own. Screen reader users keep the navigation, keyboard users
+      // bring it back by tabbing to it.
+      className={`pointer-events-none fixed inset-x-0 top-3 z-40 transition-[transform,opacity] duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] sm:top-4 ${
+        hidden
           ? "-translate-y-[calc(100%+1.5rem)] opacity-0"
           : "translate-y-0 opacity-100"
       }`}

@@ -24,36 +24,42 @@
   --on-canvas: #fffaf0;
   --on-canvas-muted: #c6d8d5;
   --canvas-line: rgba(255, 250, 240, 0.2);
-  --canvas-accent: #d98270;
+  --canvas-accent: #ee9685;
   --canvas-accent-2: #d9bd79;
   --shadow-sm: 0 2px 8px rgba(18, 54, 58, 0.08);
   --shadow-md: 0 14px 35px rgba(18, 54, 58, 0.12);
   --shadow-lg: 0 28px 65px rgba(18, 54, 58, 0.2);
 }
 
+/*
+ * Dark is its own palette rather than the light one turned down. It is
+ * anchored on the brand's deep teal and stays cool the whole way through:
+ * warm chapters read as a deep wine rather than a brown, which is what a warm
+ * hue turns into once there is no lightness left to carry it.
+ */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a1919;
-  --bg-veil: rgba(14, 32, 34, 0.82);
-  --surface: #16302f;
-  --surface-2: #1c3a39;
-  --surface-3: #264746;
+  --bg: #0c1a1b;
+  --bg-veil: rgba(16, 34, 35, 0.84);
+  --surface: #1a2c2d;
+  --surface-2: #223737;
+  --surface-3: #2f4444;
   --ink: #fffaf0;
-  --muted: #c0d1ce;
-  --subtle: #9bb5b2;
-  --line: #2e4a49;
-  --line-strong: #446463;
-  --brand: #e08d7a;
-  --brand-strong: #f0b0a1;
-  --brand-soft: #462924;
-  --on-brand: #10292a;
-  --accent: #a3bcd8;
-  --accent-soft: #24344f;
-  --canvas: #071b1f;
+  --muted: #b3c5c5;
+  --subtle: #94a4a4;
+  --line: #2b3b3b;
+  --line-strong: #455657;
+  --brand: #ee9685;
+  --brand-strong: #f7b4a9;
+  --brand-soft: #3c2423;
+  --on-brand: #0c1a1b;
+  --accent: #9ebfdc;
+  --accent-soft: #1a3040;
+  --canvas: #061415;
   --on-canvas: #fffaf0;
   --on-canvas-muted: #bed1ce;
   --canvas-line: rgba(255, 250, 240, 0.18);
-  --canvas-accent: #e08d7a;
+  --canvas-accent: #ee9685;
   --canvas-accent-2: #d9bd79;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
   --shadow-md: 0 14px 35px rgba(0, 0, 0, 0.24);
@@ -79,16 +85,16 @@
 }
 
 [data-theme="dark"] {
-  --tone-0: #0a1919;
-  --tone-1: #2d1e19;
-  --tone-2: #2b2115;
-  --tone-3: #1a261c;
-  --tone-4: #102826;
-  --tone-5: #13272f;
-  --tone-6: #132129;
-  --tone-7: #161c17;
-  --tone-8: #2a1d16;
-  --tone-9: #0a1919;
+  --tone-0: #0c1a1b;
+  --tone-1: #2c1f24;
+  --tone-2: #2c2220;
+  --tone-3: #1b2921;
+  --tone-4: #122b2a;
+  --tone-5: #132b38;
+  --tone-6: #192430;
+  --tone-7: #181d23;
+  --tone-8: #2a1e22;
+  --tone-9: #0c1a1b;
 }
 
 @theme inline {
@@ -127,30 +133,31 @@
   }
 
   /*
-   * Chapters settle rather than drift past.
-   *
-   * `proximity`, never `mandatory`. Proximity pulls the page onto a chapter
-   * once you have already come to rest near one, and otherwise leaves the
-   * scroll entirely alone: a long flick still travels the whole page, and you
-   * can still stop half way through a paragraph and stay there. Mandatory
-   * takes that away, and this site is read by people whose hands do not always
-   * do what they are told. The weight is meant to be felt, not fought.
-   *
-   * Snap points are declared with `data-snap`. The scroll port is not padded,
-   * because every chapter fills the viewport and centres its own content: the
-   * header floats over the chapter's top margin rather than over its words.
+   * Scroll snapping is deliberately absent. CSS snapping waits for you to stop
+   * and then yanks, which on a page this long reads as the page correcting
+   * you. `use-magnetic-scroll` does the settling instead, on a spring, and
+   * yields to any input. Chapters mark themselves with `data-settle`.
    */
   html {
     scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
     scrollbar-width: none;
     -webkit-tap-highlight-color: transparent;
   }
 
-  [data-snap] {
-    scroll-snap-align: start;
-    /* Never trap: a fast scroll is always allowed to pass a chapter by. */
-    scroll-snap-stop: normal;
+  /*
+   * Touch is the exception. Momentum scrolling is the platform's to own and a
+   * JavaScript settle only fights it, so a coarse pointer gets the browser's
+   * own proximity snapping, centred on the same chapters.
+   */
+  @media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-snap-type: y proximity;
+    }
+
+    [data-settle] {
+      scroll-snap-align: center;
+      scroll-snap-stop: normal;
+    }
   }
 
   html::-webkit-scrollbar,
@@ -438,9 +445,6 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-    /* Snapping moves the page on the visitor's behalf, which is the whole
-       thing they asked us not to do. */
-    scroll-snap-type: none;
   }
 
   *,
