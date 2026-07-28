@@ -8,23 +8,23 @@ export type Screen = { light: string; dark: string };
 
 export const screens = {
   welcome: {
-    light: "/screens/welcome-d688ddc5.webp",
-    dark: "/screens/welcome-dark-aee1742a.webp",
+    light: "/screens/welcome-47282008.webp",
+    dark: "/screens/welcome-dark-27e6754a.webp",
   },
   home: {
-    light: "/screens/home-4772b11b.webp",
-    dark: "/screens/home-dark-0cbf31f9.webp",
+    light: "/screens/home-51413e45.webp",
+    dark: "/screens/home-dark-2d3e4a5f.webp",
   },
   manage: {
-    light: "/screens/manage-1475d766.webp",
-    dark: "/screens/manage-dark-3eb4edc7.webp",
+    light: "/screens/manage-edd5e566.webp",
+    dark: "/screens/manage-dark-7099aaef.webp",
   },
   recovery: {
-    light: "/screens/recovery-3d66373f.webp",
-    dark: "/screens/recovery-dark-f2733534.webp",
+    light: "/screens/recovery-fd3dde23.webp",
+    dark: "/screens/recovery-dark-7649c1b0.webp",
   },
   community: {
-    light: "/screens/community-5deb35a4.webp",
-    dark: "/screens/community-dark-24f001a8.webp",
+    light: "/screens/community-aa7eb131.webp",
+    dark: "/screens/community-dark-b54937e3.webp",
   },
 } as const satisfies Record<string, Screen>;

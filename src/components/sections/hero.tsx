@@ -9,7 +9,6 @@ import {
 } from "motion/react";
 import { useRef } from "react";
 import { ArrowRight, Check, Offline } from "@/components/icons";
-import { launchMail } from "@/components/launch-list";
 import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
 import { screens } from "@/lib/screens";
@@ -114,7 +113,7 @@ export function Hero() {
               className="mt-9 flex flex-col gap-3 sm:flex-row"
             >
               <a
-                href={launchMail}
+                href="#get"
                 className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-ink px-7 font-extrabold text-bg transition-transform duration-200 hover:-translate-y-1"
               >
                 Tell me when it launches
