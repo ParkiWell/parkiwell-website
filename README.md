@@ -108,4 +108,5 @@ node scripts/screens.mjs ../ParkiWell/marketing/raw
 The launch list needs `supabase/launch_list.sql` applied to the project and
 `SUPABASE_URL` and `SUPABASE_ANON_KEY` set; see [.env.example](.env.example).
 Without them the form says it is unavailable rather than pretending to have
-saved anything.
+saved anything. Deployment is written up in
+[docs/DEPLOYING.md](docs/DEPLOYING.md).
