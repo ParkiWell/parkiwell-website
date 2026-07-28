@@ -1,111 +1,111 @@
-# ParkiWell website
+<div align="center">
 
-The marketing site for [ParkiWell](https://parkiwell.com), a Parkinson's care
-companion for iPhone and Android. The app keeps symptoms, medications, and
-guided speech and movement practice in one place and works offline. An
-a broader on-device movement coach is being explored for a future release.
+<img src="public/brand/mark.svg" alt="" width="72">
 
-## Stack
+# parkiwell.com
 
-- Next.js 16 (App Router), React 19, TypeScript
-- Tailwind CSS v4, with semantic colour tokens that drive light and dark themes
-- Motion for scroll-driven sequences
-- Playwright for cross-browser checks
-- Supabase for the launch list, reached only from the server
+**The story of a calmer care day, told by scrolling through one.**
 
-Every page is statically prerendered. The one exception is
-`/api/launch-list`, which writes a single row to Supabase on the server so that
-the browser still makes no third party request of its own. There is no
-analytics and no tracking: fonts are self hosted and the Content Security
-Policy in `next.config.ts` blocks anything cross origin.
+The marketing site for [ParkiWell](https://github.com/ParkiWell/ParkiWell), a
+Parkinson's care companion for iPhone and Android.
 
-## Getting started
+[**parkiwell.com**](https://parkiwell.com) · Coming soon to the App Store and Google Play
+
+</div>
+
+---
+
+<!-- screens:start -->
+<p align="center">
+  <img src="public/screens/home-51413e45.webp" alt="Home: your whole day at a glance" width="22%">
+  <img src="public/screens/manage-edd5e566.webp" alt="Manage: medications and doses" width="22%">
+  <img src="public/screens/recovery-fd3dde23.webp" alt="Recovery: practice with a plan" width="22%">
+  <img src="public/screens/community-dark-b54937e3.webp" alt="Community, in dark mode" width="22%">
+</p>
+<!-- screens:end -->
+
+## What the site does
+
+The home page is one continuous story rather than a stack of marketing
+sections. You scroll through a day with the app: a check-in, a dose, a
+practice session, somewhere to turn for help. Then it explains where your
+health records live, what is being built next, and answers the questions
+people actually ask.
+
+### It reads as one page, not five
+
+The background is a single colour moving. Every chapter opens on the exact
+tone the chapter above it closed on, so scrolling walks a whole palette from
+warm paper through clay, sage and steel and back again without a single
+visible seam. Light and dark are separate palettes, not one turned down.
+
+### The scroll has weight
+
+The page waits for you to stop, then settles onto the nearest chapter with a
+little give, the way something with mass does. Nothing is ever taken from
+you: any scroll, tap or key cancels it, a long flick crosses the whole page,
+and the end of the page is somewhere you are allowed to stop.
+
+### It works the way you need it to
+
+Light and dark themes, chosen or followed from your system. Reduced motion
+support that swaps the pinned sequences for a plain stacked story instead of
+just freezing them. Real focus rings, a skip link, labelled controls, and
+large touch targets throughout.
+
+### It is honest about the app
+
+Every claim on the site has to be true of the shipped app. The privacy policy
+and terms are the same documents the app ships with. The movement coach is
+described as being explored, because it is.
+
+## Built for trust
+
+- **No third party requests.** Fonts, images and scripts all come from this
+  origin. A Content Security Policy enforces it rather than trusting us to
+  remember.
+- **No analytics, no tracking, no cookies.** There is nothing to consent to
+  because nothing is collected.
+- **The launch list holds an email address and nothing else.** Your browser
+  never talks to the database; the server writes the row. The key it uses can
+  add an address and cannot read the list back.
+- **Fast by default.** Every page is prerendered, screenshots are served
+  immutable, and the whole thing is a single origin with no client side
+  routing to wait for.
+
+Read the [Privacy Policy](https://parkiwell.com/privacy), the
+[Terms of Service](https://parkiwell.com/terms), or visit
+[Support](https://parkiwell.com/support).
+
+## Medical disclaimer
+
+ParkiWell is an organizational and educational tool. It is **not** a medical
+device and does not provide medical advice, diagnosis, or treatment. Always
+consult your care team about your health.
+
+## For developers
+
+Next.js App Router, React, TypeScript and Tailwind, with Motion for the
+scroll-driven sequences and Playwright for cross-browser checks. The launch
+list is a Route Handler that writes to the same Supabase project the app uses.
 
 ```bash
 npm install
-cp .env.example .env.local   # optional, for the launch list
-npm run dev                  # http://localhost:3000
-```
+npm run dev            # http://localhost:3000
 
-Without Supabase credentials the launch list form reports that it is
-unavailable and points at the email address, which is the intended behaviour
-for a preview build. To wire it up, apply `supabase/launch_list.sql` to the
-project the app uses and set `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
-
-Product screenshots are generated from the app repository:
-
-```bash
-node scripts/screens.mjs ../ParkiWell/marketing/raw
-```
-
-Filenames carry a content hash, so re-running it after the app's captures
-change is enough: `/screens/*` stays immutable in the cache and new artwork is
-always a new URL.
-
-## Checks
-
-```bash
 npm run lint           # eslint
 npm run build          # type check and static build
 npm run test           # playwright, desktop Chromium and mobile WebKit
 ```
 
-`npm run test` builds nothing itself: run `npm run build` first, then the test
-command starts a production server on port 3210.
+Product screenshots are generated from the app repository, with a content hash
+in each filename so the immutable caching stays honest:
 
-## Structure
-
-```text
-src/app/                 routes: home, support, privacy, terms, sitemap, robots
-src/components/          header, footer, shared UI
-src/components/sections  home page sections, one file per section
-src/content/             privacy and terms, in Markdown, rendered at build time
-src/app/api/             the launch list endpoint
-src/hooks/               reduced motion, scroll gravity, viewport helpers
-src/lib/stages.ts        timing for the pinned scroll sequences
-src/lib/tones.ts         the chapter tone scale, mirrored in globals.css
-src/lib/screens.ts       generated: hashed paths for the product screenshots
-supabase/                SQL for the launch list table and its policies
-public/screens/          product screenshots
-scripts/                 screenshot build, and diagnostics for layout and weight
+```bash
+node scripts/screens.mjs ../ParkiWell/marketing/raw
 ```
 
-## Design notes
-
-Scrolling the home page walks one continuous colour: warm paper, through clay,
-sand, sage, mint and steel, and back to paper under the footer. Each chapter
-starts on the tone the one above it ended on, so there is no boundary to see.
-The stops are in `src/lib/tones.ts` and in `--tone-0` through `--tone-9` in
-`globals.css`, and tests keep the two copies in step.
-
-Scrolling has weight. The page waits for you to stop, then springs the rest of
-the way onto the nearest chapter, so it arrives with a little give rather than
-a click. Nothing is taken away while you are scrolling: any input cancels the
-settle, a long flick crosses the whole page, and the end of the page is a place
-you are allowed to stop. Touch keeps the browser's own snapping, and anyone who
-has asked for reduced motion gets neither.
-
-The day journey is the only pinned section with scroll-linked motion. It stops
-pinning and becomes a plain stacked story on small screens and whenever the
-visitor has asked for reduced motion, so nothing important is only reachable
-by animating. That choice is made in CSS rather than in JavaScript, for the
-reason spelled out in [AGENTS.md](AGENTS.md).
-
-Copy avoids em dashes throughout, and a test fails the build if one appears on
-a rendered page.
-
-## Security
-
-Every response carries a Content Security Policy that keeps the page to this
-origin, plus HSTS, a Permissions-Policy that switches off every gated browser
-feature, and the cross-origin isolation headers. Brand artwork is the single
-exception to the same-origin resource policy, because share cards and favicons
-are fetched by other sites. The Markdown renderer behind the legal pages
-escapes raw HTML and refuses link schemes other than http, https, mailto, and
-site-relative paths, so nothing in `src/content/` can ever execute. Tests cover
-all of it.
-
-## Contributing
-
-Read [AGENTS.md](AGENTS.md) before changing copy or motion. Claims about the
-app have to match the shipped app.
+The launch list needs `supabase/launch_list.sql` applied to the project and
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` set; see [.env.example](.env.example).
+Without them the form says it is unavailable rather than pretending to have
+saved anything.

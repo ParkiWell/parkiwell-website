@@ -267,9 +267,6 @@ test.describe("the launch list", () => {
       form.getByRole("button", { name: /Join the launch list/ }),
     ).toBeVisible();
 
-    // The address is still on the page, so the list is reachable even if the
-    // endpoint is down.
-    await expect(page.locator('#get a[href^="mailto:"]')).toBeVisible();
   });
 
   // Filled in only by something that cannot see the page.

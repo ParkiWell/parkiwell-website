@@ -30,10 +30,14 @@ import { useStillness } from "@/hooks/use-stillness";
 const ARRIVED = 2;
 
 /**
- * How far from a chapter's centre the pull still reaches, as a share of the
- * viewport. Beyond it you are between chapters and the page leaves you there.
+ * How far from a chapter's centre the pull reaches, as a share of the viewport.
+ *
+ * Wide enough that the reaches overlap, so wherever you stop there is always a
+ * chapter wanting to pull you square. A shorter reach left a band in the middle
+ * of every boundary where nothing pulled at all, and stopping there felt like
+ * the page had given up on you rather than left you alone.
  */
-const REACH = 0.42;
+const REACH = 0.62;
 
 /** Quiet time after the last input before the page is allowed to settle. */
 const REST_MS = 90;

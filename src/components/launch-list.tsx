@@ -4,11 +4,6 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { ArrowRight, Check } from "@/components/icons";
 import { site } from "@/lib/site";
 
-export const launchSubject = "Tell me when ParkiWell launches";
-export const launchMail = `mailto:${site.email}?subject=${encodeURIComponent(
-  launchSubject,
-)}`;
-
 type State = "idle" | "sending" | "done" | "invalid" | "busy" | "unavailable";
 
 const messages: Record<Exclude<State, "idle" | "sending" | "done">, string> = {
@@ -20,12 +15,14 @@ const messages: Record<Exclude<State, "idle" | "sending" | "done">, string> = {
 /**
  * The launch list.
  *
- * A real form, posting to this origin. It works three ways on purpose: with
- * JavaScript it submits in place, without JavaScript the browser posts the form
- * and comes back to this section with the outcome in the query string, and if
- * the list is down entirely the email address underneath still reaches a person.
- * A launch list that quietly drops addresses is worse than one that admits it.
+ * A real form, posting to this origin. It works two ways on purpose: with
+ * JavaScript it submits in place, and without it the browser posts the form and
+ * comes back to this section with the outcome in the query string. If the list
+ * cannot take the address at all it says so and names somewhere that can,
+ * because a launch list that quietly drops signups is worse than one that
+ * admits it.
  */
+
 /**
  * A form posted without JavaScript comes back to `/?launch=...#get`, so the
  * outcome has to be read off the URL. It is read through
@@ -149,26 +146,20 @@ export function LaunchList({ className = "" }: { className?: string }) {
         </button>
       </form>
 
-      <p
-        id={`${fieldId}-note`}
-        role={failed ? "alert" : undefined}
-        className="mt-4 max-w-[34rem] text-[0.9rem] font-semibold text-ink/70"
-      >
-        {failed ? (
-          messages[state as keyof typeof messages]
-        ) : (
-          <>
-            One email, when it launches. Or write to{" "}
-            <a
-              href={launchMail}
-              className="font-extrabold text-ink underline underline-offset-4"
-            >
-              {site.email}
-            </a>
-            .
-          </>
-        )}
-      </p>
+      {/*
+        Nothing is said here until there is something to say. The address only
+        appears when the list cannot take the signup, which is the one moment
+        it is genuinely useful rather than a second thing to read.
+      */}
+      {failed && (
+        <p
+          id={`${fieldId}-note`}
+          role="alert"
+          className="mt-4 max-w-[34rem] text-[0.9rem] font-semibold text-ink/70"
+        >
+          {messages[state as keyof typeof messages]}
+        </p>
+      )}
     </div>
   );
 }
