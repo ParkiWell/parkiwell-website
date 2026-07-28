@@ -53,7 +53,8 @@ next-env.d.ts
 /artifacts/
 /output/
 
-# Agent working notes. Kept locally so the conventions survive, out of the
-# repository so the public history is the site and nothing else.
+# Working notes. Kept locally so the knowledge survives, out of the repository
+# so the public history is the site and nothing else.
 AGENTS.md
 CLAUDE.md
+docs/DEPLOYING.md
