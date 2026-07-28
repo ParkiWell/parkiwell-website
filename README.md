@@ -24,41 +24,6 @@ Parkinson's care companion for iPhone and Android.
 </p>
 <!-- screens:end -->
 
-## What the site does
-
-The home page is one continuous story rather than a stack of marketing
-sections. You scroll through a day with the app: a check-in, a dose, a
-practice session, somewhere to turn for help. Then it explains where your
-health records live, what is being built next, and answers the questions
-people actually ask.
-
-### It reads as one page, not five
-
-The background is a single colour moving. Every chapter opens on the exact
-tone the chapter above it closed on, so scrolling walks a whole palette from
-warm paper through clay, sage and steel and back again without a single
-visible seam. Light and dark are separate palettes, not one turned down.
-
-### The scroll has weight
-
-The page waits for you to stop, then settles onto the nearest chapter with a
-little give, the way something with mass does. Nothing is ever taken from
-you: any scroll, tap or key cancels it, a long flick crosses the whole page,
-and the end of the page is somewhere you are allowed to stop.
-
-### It works the way you need it to
-
-Light and dark themes, chosen or followed from your system. Reduced motion
-support that swaps the pinned sequences for a plain stacked story instead of
-just freezing them. Real focus rings, a skip link, labelled controls, and
-large touch targets throughout.
-
-### It is honest about the app
-
-Every claim on the site has to be true of the shipped app. The privacy policy
-and terms are the same documents the app ships with. The movement coach is
-described as being explored, because it is.
-
 ## Built for trust
 
 - **No third party requests.** Fonts, images and scripts all come from this
