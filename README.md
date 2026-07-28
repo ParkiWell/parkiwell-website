@@ -15,14 +15,16 @@ Parkinson's care companion for iPhone and Android.
 
 ---
 
-<!-- screens:start -->
+<!-- site-shots:start -->
 <p align="center">
-  <img src="public/screens/home-51413e45.webp" alt="Home: your whole day at a glance" width="22%">
-  <img src="public/screens/manage-edd5e566.webp" alt="Manage: medications and doses" width="22%">
-  <img src="public/screens/recovery-fd3dde23.webp" alt="Recovery: practice with a plan" width="22%">
-  <img src="public/screens/community-dark-b54937e3.webp" alt="Community, in dark mode" width="22%">
+  <img src="docs/site/hero-d051e4c8.webp" alt="The opening: your day, in rhythm" width="88%">
 </p>
-<!-- screens:end -->
+<p align="center">
+  <img src="docs/site/day-d3ab3b75.webp" alt="The pinned day sequence" width="29%">
+  <img src="docs/site/privacy-1b722f96.webp" alt="The privacy chapter, in dark mode" width="29%">
+  <img src="docs/site/launch-e1e372d4.webp" alt="The launch list at the end of the page" width="29%">
+</p>
+<!-- site-shots:end -->
 
 ## Built for trust
 
@@ -63,11 +65,14 @@ npm run build          # type check and static build
 npm run test           # playwright, desktop Chromium and mobile WebKit
 ```
 
-Product screenshots are generated from the app repository, with a content hash
-in each filename so the immutable caching stays honest:
+Both sets of pictures are generated, with a content hash in each filename so
+the immutable caching stays honest and the readme cannot rot into broken
+images. The product screenshots come from the app repository; the ones above
+are of this site:
 
 ```bash
-node scripts/screens.mjs ../ParkiWell/marketing/raw
+node scripts/screens.mjs ../ParkiWell/marketing/raw   # app screens
+node scripts/readme-shots.mjs                         # this readme, needs a running server
 ```
 
 The launch list needs `supabase/launch_list.sql` applied to the project and

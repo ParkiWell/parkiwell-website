@@ -45,8 +45,8 @@ const steps: Step[] = [
   },
   {
     label: "A practice moment",
-    title: "Move to a plan you set",
-    body: "Choose weekly speech and movement goals. ParkiWell brings one focused session forward and keeps your history together.",
+    title: "Practice at your pace",
+    body: "Set a weekly goal for speech and movement. ParkiWell brings the next session forward and keeps what you have done together.",
     screen: screens.recovery,
     alt: "The Recovery screen showing a weekly practice goal and a chair workout ready to begin.",
     icon: Play,

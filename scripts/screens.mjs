@@ -11,7 +11,7 @@
 // not would keep showing the old picture to everyone who had already visited.
 // Hashing means new artwork is always a new URL, and the caching stays honest.
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -105,39 +105,8 @@ ${built
 await writeFile(MANIFEST, manifest);
 console.log(`\nwrote ${path.relative(process.cwd(), MANIFEST)}`);
 
-// The README shows four of these, and the filenames it points at change every
-// time this runs. Rewriting the block here means the pictures in the README
-// cannot rot into broken images the next time the app's captures change.
-const README = path.join(process.cwd(), "README.md");
-const shown = [
-  ["home", "light", "Home: your whole day at a glance"],
-  ["manage", "light", "Manage: medications and doses"],
-  ["recovery", "light", "Recovery: practice with a plan"],
-  ["community", "dark", "Community, in dark mode"],
-];
-const row =
-  `<!-- screens:start -->\n<p align="center">\n` +
-  shown
-    .map(([name, theme, alt]) => {
-      const shot = built.find((item) => item.name === name);
-      return `  <img src="/screens/${theme === "dark" ? shot.dark : shot.light}" alt="${alt}" width="22%">`;
-    })
-    .join("\n")
-    .replaceAll('src="/screens/', 'src="public/screens/') +
-  `\n</p>\n<!-- screens:end -->`;
-
-const readme = await readFile(README, "utf8");
-const replaced = readme.replace(
-  /<!-- screens:start -->[\s\S]*?<!-- screens:end -->/,
-  row,
-);
-if (replaced !== readme) {
-  await writeFile(README, replaced);
-  console.log("updated the screenshot row in README.md");
-}
-
 // Every screenshot has to keep the phone frame's aspect ratio, or the frame
-// crops it.
+// crops what it is holding.
 const { width, height } = await sharp(
   path.join(OUT, built[0].light),
 ).metadata();
