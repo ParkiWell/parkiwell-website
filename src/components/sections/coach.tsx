@@ -63,7 +63,8 @@ export function FutureMovementCoach() {
     <section
       id="future"
       data-chapter="future"
-      className="chapter flex min-h-[68svh] scroll-mt-24 items-center py-20 text-ink"
+      data-snap
+      className="chapter flex min-h-[68svh] items-center py-20 text-ink"
     >
       <Container>
         <div className="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24 xl:gap-32">

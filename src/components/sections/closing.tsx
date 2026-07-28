@@ -14,7 +14,8 @@ export function Closing() {
     <section
       id="get"
       data-chapter="get"
-      className="chapter relative flex min-h-[100svh] scroll-mt-24 items-center overflow-hidden py-28 text-ink"
+      data-snap
+      className="chapter relative flex min-h-[100svh] items-center overflow-hidden py-28 text-ink"
     >
       <Container className="relative">
         <div className="grid items-center gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">

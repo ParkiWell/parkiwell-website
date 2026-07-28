@@ -56,6 +56,12 @@ starts on the tone the one above it ended on, so there is no boundary to see.
 The stops are in `src/lib/tones.ts` and in `--tone-0` through `--tone-9` in
 `globals.css`, and tests keep the two copies in step.
 
+Scrolling has weight. Chapters snap into place once you come to rest near one,
+and the pinned day sequence takes a little over a screen of scrolling per step,
+so the story is walked through rather than flicked past. The snapping is
+`proximity` and never blocks a fast scroll, and it turns off completely for
+anyone who has asked for reduced motion.
+
 The day journey is the only pinned section with scroll-linked motion. It stops
 pinning and becomes a plain stacked story on small screens and whenever the
 visitor has asked for reduced motion, so nothing important is only reachable

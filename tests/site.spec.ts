@@ -286,6 +286,143 @@ test.describe("the launch list", () => {
   });
 });
 
+test.describe("scroll snapping", () => {
+  // Proximity settles the page onto a chapter you have already stopped near.
+  // Mandatory would drag you onto one whether you meant to stop or not, which
+  // on a site read by people with a movement disorder is a trap, not a polish.
+  test("stays proximity, and switches off for reduced motion", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto("/");
+    // Engines drop `proximity` from the computed value because it is the
+    // default strictness. `mandatory` is the one that would show up here.
+    expect(
+      await page.evaluate(
+        () => getComputedStyle(document.documentElement).scrollSnapType,
+      ),
+    ).toMatch(/^y( proximity)?$/);
+    await context.close();
+
+    const still = await browser.newContext({ reducedMotion: "reduce" });
+    const stillPage = await still.newPage();
+    await stillPage.goto("/");
+    expect(
+      await stillPage.evaluate(
+        () => getComputedStyle(document.documentElement).scrollSnapType,
+      ),
+    ).toBe("none");
+    await still.close();
+  });
+
+  test("a long scroll is never held back", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "wheel input is desktop");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    for (let i = 0; i < 14; i += 1) await page.mouse.wheel(0, 900);
+    await page.waitForTimeout(1500);
+
+    const { scrolled, furthest } = await page.evaluate(() => ({
+      scrolled: window.scrollY,
+      furthest: document.body.scrollHeight - window.innerHeight,
+    }));
+    expect(scrolled, "reaches the end of the page in one go").toBeGreaterThan(
+      furthest * 0.9,
+    );
+  });
+
+  test("resting between chapters is allowed to stay there", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one viewport is enough");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    // The widest gap between two snap points: as far from either as the page
+    // allows, which is where mandatory snapping would drag you off.
+    const target = await page.evaluate(() => {
+      const tops = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-snap]"),
+      )
+        .map((element) => element.getBoundingClientRect().top + window.scrollY)
+        .sort((a, b) => a - b);
+      let widest = { at: 0, size: 0 };
+      for (let i = 1; i < tops.length; i += 1) {
+        const size = tops[i] - tops[i - 1];
+        if (size > widest.size) {
+          widest = { at: Math.round((tops[i] + tops[i - 1]) / 2), size };
+        }
+      }
+      return widest.at;
+    });
+
+    await page.evaluate(
+      (top) => window.scrollTo({ top, behavior: "instant" }),
+      target,
+    );
+    await page.waitForTimeout(1400);
+    expect(await page.evaluate(() => window.scrollY)).toBe(target);
+  });
+
+  test("every chapter and day step offers somewhere to settle", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const points = await page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLElement>("[data-snap]"))
+        .filter((element) => element.offsetParent !== null || element.offsetTop)
+        .map((element) => ({
+          top: Math.round(element.getBoundingClientRect().top + window.scrollY),
+          chapter: element.dataset.chapter ?? "day step",
+          stop: getComputedStyle(element).scrollSnapStop,
+        })),
+    );
+
+    // Never `always`: that is what stops a fast scroll passing a chapter by.
+    expect(points.every((point) => point.stop === "normal")).toBe(true);
+    expect(points.filter((point) => point.chapter === "day step")).toHaveLength(
+      4,
+    );
+    for (const chapter of ["hero", "privacy", "future", "questions", "get"]) {
+      expect(
+        points.some((point) => point.chapter === chapter),
+        `${chapter} can be settled on`,
+      ).toBe(true);
+    }
+  });
+
+  // Clicking a step and scrolling to it have to agree, or the button leaves you
+  // somewhere the page immediately pulls you away from.
+  test("the day step buttons come to rest on the snap points", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const rulers = await page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLElement>("[data-snap]"))
+        .filter((element) => !element.dataset.chapter)
+        .map((element) =>
+          Math.round(element.getBoundingClientRect().top + window.scrollY),
+        ),
+    );
+
+    for (const [index, ruler] of rulers.entries()) {
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
+      await page.waitForTimeout(300);
+      await page.locator("#day button").nth(index).click();
+      await page.waitForTimeout(2200);
+      const at = await page.evaluate(() => window.scrollY);
+      expect(Math.abs(at - ruler), `step ${index + 1} rests on its snap point`)
+        .toBeLessThanOrEqual(2);
+    }
+  });
+});
+
 test.describe("the chapter blend", () => {
   // The pinned day sequence interpolates its background in JavaScript, so it
   // reads the scale from src/lib/tones.ts while every other chapter reads the

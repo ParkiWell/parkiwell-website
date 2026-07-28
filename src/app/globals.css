@@ -126,10 +126,31 @@
     border-color: var(--line);
   }
 
+  /*
+   * Chapters settle rather than drift past.
+   *
+   * `proximity`, never `mandatory`. Proximity pulls the page onto a chapter
+   * once you have already come to rest near one, and otherwise leaves the
+   * scroll entirely alone: a long flick still travels the whole page, and you
+   * can still stop half way through a paragraph and stay there. Mandatory
+   * takes that away, and this site is read by people whose hands do not always
+   * do what they are told. The weight is meant to be felt, not fought.
+   *
+   * Snap points are declared with `data-snap`. The scroll port is not padded,
+   * because every chapter fills the viewport and centres its own content: the
+   * header floats over the chapter's top margin rather than over its words.
+   */
   html {
     scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
     scrollbar-width: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-snap] {
+    scroll-snap-align: start;
+    /* Never trap: a fast scroll is always allowed to pass a chapter by. */
+    scroll-snap-stop: normal;
   }
 
   html::-webkit-scrollbar,
@@ -417,6 +438,9 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+    /* Snapping moves the page on the visitor's behalf, which is the whole
+       thing they asked us not to do. */
+    scroll-snap-type: none;
   }
 
   *,

@@ -152,6 +152,7 @@ function StackedStep({ item, index }: { item: Step; index: number }) {
   return (
     <article
       data-chapter={`day-${index + 1}`}
+      data-snap
       className="chapter-flow flex min-h-[100svh] items-center text-ink"
     >
       <Container className="py-24">
@@ -199,6 +200,28 @@ const trackStops = dayTrack(false).map(
   (_, index, all) => index / (all.length - 1),
 );
 
+/**
+ * How far you scroll to move the day on by one step, and the run-out at the
+ * end that lets the last step hold before the privacy chapter takes over.
+ *
+ * A step is deliberately longer than a screen. The sequence is four screens of
+ * reading compressed into one pinned panel, and matching it one to one made
+ * the whole chapter go by in a flick.
+ */
+const STEP_SVH = 125;
+const RUN_OUT_SVH = 30;
+const TRACK_SVH = steps.length * STEP_SVH + RUN_OUT_SVH;
+
+/**
+ * Where each step is settled, as a fraction of the panel's scroll travel.
+ *
+ * `stagePresence` gives step k the slice of progress from k/n to (k+1)/n, so
+ * the middle of that slice is where its copy is fully opaque and nothing is
+ * handing over. That is the position both the snap points and the step buttons
+ * aim at, so clicking a step and scrolling to it come to rest in one place.
+ */
+const settledAt = (index: number) => (index + 0.5) / steps.length;
+
 export function Journey() {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -211,10 +234,12 @@ export function Journey() {
     target: ref,
     offset: ["start start", "end end"],
   });
+  // Heavy and overdamped. The panel follows the scroll the way something with
+  // mass does: it takes a moment to get going and it does not overshoot.
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 58,
-    damping: 22,
-    mass: 0.72,
+    stiffness: 44,
+    damping: 24,
+    mass: 1,
   });
   const lightBackground = useTransform(
     smoothProgress,
@@ -238,8 +263,10 @@ export function Journey() {
     const box = section.getBoundingClientRect();
     const start = window.scrollY + box.top;
     const distance = section.offsetHeight - window.innerHeight;
-    const target = start + distance * ((index + 0.08) / steps.length);
-    window.scrollTo({ top: target, behavior: "smooth" });
+    window.scrollTo({
+      top: start + distance * settledAt(index),
+      behavior: "smooth",
+    });
   }, []);
 
   return (
@@ -259,8 +286,26 @@ export function Journey() {
       <div
         ref={ref}
         className="relative hidden motion-safe:lg:block"
-        style={{ height: `${steps.length * 100 + 30}svh` }}
+        style={{ height: `${TRACK_SVH}svh` }}
       >
+        {/*
+          The four steps of the pinned sequence are scroll positions, not
+          elements, so there is nothing for the browser to snap to. These
+          rulers sit at the scroll offset where each step is settled and give
+          it something. They are hairlines with no paint and no content.
+        */}
+        {steps.map((item, index) => (
+          <div
+            key={`snap-${item.label}`}
+            aria-hidden="true"
+            data-snap
+            className="pointer-events-none absolute inset-x-0 h-px"
+            style={{
+              top: `${(((TRACK_SVH - 100) * settledAt(index)) / TRACK_SVH) * 100}%`,
+            }}
+          />
+        ))}
+
         <motion.div
           style={{ backgroundColor: dark ? darkBackground : lightBackground }}
           className="sticky top-0 h-[100svh] overflow-hidden text-ink"

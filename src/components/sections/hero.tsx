@@ -53,6 +53,7 @@ export function Hero() {
     <section
       ref={ref}
       data-chapter="hero"
+      data-snap
       className="chapter relative flex min-h-[100svh] overflow-hidden pt-28 sm:pt-32"
     >
       <Container className="relative flex flex-1 items-center pb-14 sm:pb-20">

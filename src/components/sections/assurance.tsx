@@ -38,7 +38,8 @@ export function Assurance() {
     <section
       id="privacy"
       data-chapter="privacy"
-      className="chapter relative flex min-h-[100svh] scroll-mt-24 items-center overflow-hidden py-28 text-ink"
+      data-snap
+      className="chapter relative flex min-h-[100svh] items-center overflow-hidden py-28 text-ink"
     >
       <Container className="relative">
         <div className="grid items-center gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 xl:gap-28">

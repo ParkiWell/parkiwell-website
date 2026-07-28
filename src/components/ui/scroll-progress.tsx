@@ -10,9 +10,12 @@ import { motion, useScroll, useSpring } from "motion/react";
  */
 export function ScrollProgress() {
   const { scrollYProgress } = useScroll();
+  // Trails the scroll rather than tracking it exactly, so the bar settles into
+  // a chapter a moment after the page does.
   const scaleX = useSpring(scrollYProgress, {
-    stiffness: 180,
+    stiffness: 120,
     damping: 30,
+    mass: 1,
     restDelta: 0.001,
   });
 

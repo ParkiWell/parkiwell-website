@@ -48,7 +48,8 @@ export function Faq() {
     <section
       id="questions"
       data-chapter="questions"
-      className="chapter flex min-h-[100svh] scroll-mt-24 items-center py-28 text-ink"
+      data-snap
+      className="chapter flex min-h-[100svh] items-center py-28 text-ink"
     >
       <Container>
         <div className="grid gap-14 lg:grid-cols-[0.75fr_1.25fr] lg:gap-24 xl:gap-32">
