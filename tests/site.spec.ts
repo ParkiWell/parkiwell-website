@@ -280,6 +280,9 @@ test.describe("the launch list", () => {
     await expect(trap).toHaveAttribute("aria-hidden", "true");
   });
 
+  // The suite runs with the launch list credentials blanked (see
+  // playwright.config.ts), so this is the degraded path on purpose: it must
+  // name a way through rather than fail quietly.
   test("says so when the list cannot take the address", async ({ page }) => {
     await page.goto("/#get", { waitUntil: "networkidle" });
     // Past the window that turns away a script driving the form instantly.
@@ -287,8 +290,6 @@ test.describe("the launch list", () => {
     await page.locator("#get form").getByRole("textbox").fill("reader@example.com");
     await page.locator("#get form").getByRole("button").click();
 
-    // The test server runs without Supabase credentials, so this is the
-    // degraded path: it must name the fallback rather than fail silently.
     await expect(page.locator("#get").getByRole("alert")).toContainText(
       /Email .+@.+/,
     );

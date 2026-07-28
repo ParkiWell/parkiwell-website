@@ -77,11 +77,16 @@ export async function addToLaunchList(email: string): Promise<Outcome> {
         apikey: key,
         authorization: `Bearer ${key}`,
         "content-type": "application/json",
-        // Nothing comes back, and an address already on the list is a success
-        // rather than a conflict. Both of those are on purpose: the response
-        // must not differ for an address that is already signed up, or it
-        // becomes a way to ask whether someone is.
-        prefer: "return=minimal,resolution=ignore-duplicates",
+        // Nothing needs to come back.
+        //
+        // Notably absent: `resolution=ignore-duplicates`. That would be the
+        // tidy way to let a repeat signup pass, but it compiles to ON CONFLICT,
+        // which Postgres will only run for a role that can also SELECT the
+        // table. Buying it would mean granting the anon role read access to the
+        // whole launch list and leaning on row level security alone to take it
+        // back. The duplicate is handled below instead, and the key stays
+        // able to do exactly one thing.
+        prefer: "return=minimal",
       },
       body: JSON.stringify({ email, source: "site" }),
       signal: controller.signal,
@@ -90,11 +95,14 @@ export async function addToLaunchList(email: string): Promise<Outcome> {
 
     if (response.ok) return { ok: true };
 
-    console.error(
-      `launch list insert failed: ${response.status} ${await response
-        .text()
-        .catch(() => "")}`,
-    );
+    // Already on the list. That is a success, and it has to be reported as one:
+    // the visitor is careful, not wrong, and a different answer here would turn
+    // the form into a way to ask whether a given address had signed up. Only
+    // this server ever sees the conflict.
+    const body = await response.text().catch(() => "");
+    if (response.status === 409 || body.includes("23505")) return { ok: true };
+
+    console.error(`launch list insert failed: ${response.status} ${body}`);
     return { ok: false, reason: "unavailable" };
   } catch (error) {
     console.error("launch list insert threw", error);
