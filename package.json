@@ -1,0 +1,35 @@
+{
+  "name": "parkiwell-website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "playwright test"
+  },
+  "//overrides": "sharp carries the libvips fixes for CVE-2026-33327 and friends; postcss carries the sourceMappingURL path traversal fix. Next pulls older copies of both transitively. The remaining audit findings are all brace-expansion under eslint, which cannot be overridden without breaking minimatch v3 and needs an eslint 10 upgrade instead.",
+  "overrides": {
+    "postcss": "^8.5.24",
+    "sharp": "^0.35.3"
+  },
+  "dependencies": {
+    "marked": "^18.0.7",
+    "motion": "^12.42.2",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

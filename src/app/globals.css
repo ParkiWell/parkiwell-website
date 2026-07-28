@@ -1,0 +1,430 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+  --bg: #f4f0e7;
+  --bg-veil: rgba(248, 245, 238, 0.82);
+  --surface: #fdfbf6;
+  --surface-2: #eae5db;
+  --surface-3: #d9d3c9;
+  --ink: #12363a;
+  --muted: #4c6567;
+  --subtle: #67797a;
+  --line: #d6cec2;
+  --line-strong: #b9b1a6;
+  --brand: #c25c4d;
+  --brand-strong: #97423a;
+  --brand-soft: #f0d6cd;
+  --on-brand: #fffaf0;
+  --accent: #2f5c86;
+  --accent-soft: #d7e2ec;
+  --canvas: #12363a;
+  --on-canvas: #fffaf0;
+  --on-canvas-muted: #c6d8d5;
+  --canvas-line: rgba(255, 250, 240, 0.2);
+  --canvas-accent: #d98270;
+  --canvas-accent-2: #d9bd79;
+  --shadow-sm: 0 2px 8px rgba(18, 54, 58, 0.08);
+  --shadow-md: 0 14px 35px rgba(18, 54, 58, 0.12);
+  --shadow-lg: 0 28px 65px rgba(18, 54, 58, 0.2);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a1919;
+  --bg-veil: rgba(14, 32, 34, 0.82);
+  --surface: #16302f;
+  --surface-2: #1c3a39;
+  --surface-3: #264746;
+  --ink: #fffaf0;
+  --muted: #c0d1ce;
+  --subtle: #9bb5b2;
+  --line: #2e4a49;
+  --line-strong: #446463;
+  --brand: #e08d7a;
+  --brand-strong: #f0b0a1;
+  --brand-soft: #462924;
+  --on-brand: #10292a;
+  --accent: #a3bcd8;
+  --accent-soft: #24344f;
+  --canvas: #071b1f;
+  --on-canvas: #fffaf0;
+  --on-canvas-muted: #bed1ce;
+  --canvas-line: rgba(255, 250, 240, 0.18);
+  --canvas-accent: #e08d7a;
+  --canvas-accent-2: #d9bd79;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 14px 35px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 28px 65px rgba(0, 0, 0, 0.34);
+}
+
+/*
+ * Chapter tones. Mirrored in `src/lib/tones.ts`, where the pinned day sequence
+ * reads them to interpolate its background as you scroll; a test keeps the two
+ * copies honest. See that file for how the scale was built.
+ */
+:root {
+  --tone-0: #f4f0e7;
+  --tone-1: #f6dacd;
+  --tone-2: #efe1ca;
+  --tone-3: #d5e8d5;
+  --tone-4: #caeae6;
+  --tone-5: #d1e9f4;
+  --tone-6: #dcebf4;
+  --tone-7: #eeede6;
+  --tone-8: #f5e1d4;
+  --tone-9: #f4f0e7;
+}
+
+[data-theme="dark"] {
+  --tone-0: #0a1919;
+  --tone-1: #2d1e19;
+  --tone-2: #2b2115;
+  --tone-3: #1a261c;
+  --tone-4: #102826;
+  --tone-5: #13272f;
+  --tone-6: #132129;
+  --tone-7: #161c17;
+  --tone-8: #2a1d16;
+  --tone-9: #0a1919;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-veil: var(--bg-veil);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-canvas: var(--canvas);
+  --color-on-canvas: var(--on-canvas);
+  --color-on-canvas-muted: var(--on-canvas-muted);
+  --color-canvas-line: var(--canvas-line);
+  --color-canvas-accent: var(--canvas-accent);
+  --color-canvas-accent-2: var(--canvas-accent-2);
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: var(--shadow-sm);
+  --shadow-raised: var(--shadow-md);
+  --shadow-device: var(--shadow-lg);
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    color: inherit;
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 92;
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button,
+  a,
+  summary {
+    touch-action: manipulation;
+  }
+
+  button,
+  summary {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    border-radius: 0.35rem;
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  ::selection {
+    background: #d8c7ad;
+    color: #102e32;
+  }
+}
+
+@layer components {
+  /*
+   * A chapter paints the slice of the tone scale between where the chapter
+   * above it ended and where the one below it starts, so the page reads as a
+   * single colour moving rather than a stack of coloured boxes. Holding the
+   * incoming tone for the first fifth keeps each chapter recognisable before
+   * the handover begins.
+   *
+   * `background-color` is the fallback: a browser that cannot parse an oklab
+   * gradient drops the image and lands on a flat, correctly themed fill.
+   */
+  .chapter {
+    background-color: var(--chapter-from);
+    background-image: linear-gradient(
+      to bottom in oklab,
+      var(--chapter-from) 0%,
+      var(--chapter-from) 18%,
+      var(--chapter-to) 100%
+    );
+  }
+
+  /* For chapters that run back to back and should read as one long fade. */
+  .chapter-flow {
+    background-color: var(--chapter-from);
+    background-image: linear-gradient(
+      to bottom in oklab,
+      var(--chapter-from),
+      var(--chapter-to)
+    );
+  }
+
+  [data-chapter="hero"] {
+    --chapter-from: var(--tone-0);
+    --chapter-to: var(--tone-1);
+  }
+
+  [data-chapter="day-1"] {
+    --chapter-from: var(--tone-1);
+    --chapter-to: var(--tone-2);
+  }
+
+  [data-chapter="day-2"] {
+    --chapter-from: var(--tone-2);
+    --chapter-to: var(--tone-3);
+  }
+
+  [data-chapter="day-3"] {
+    --chapter-from: var(--tone-3);
+    --chapter-to: var(--tone-4);
+  }
+
+  [data-chapter="day-4"] {
+    --chapter-from: var(--tone-4);
+    --chapter-to: var(--tone-5);
+  }
+
+  [data-chapter="privacy"] {
+    --chapter-from: var(--tone-5);
+    --chapter-to: var(--tone-6);
+  }
+
+  [data-chapter="future"] {
+    --chapter-from: var(--tone-6);
+    --chapter-to: var(--tone-7);
+  }
+
+  [data-chapter="questions"] {
+    --chapter-from: var(--tone-7);
+    --chapter-to: var(--tone-8);
+  }
+
+  [data-chapter="get"] {
+    --chapter-from: var(--tone-8);
+    --chapter-to: var(--tone-9);
+  }
+
+  /* The scale closes where it opened, so the footer needs no handover. */
+  [data-chapter="footer"] {
+    --chapter-from: var(--tone-9);
+    --chapter-to: var(--tone-9);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 88;
+    font-weight: 750;
+    letter-spacing: -0.065em;
+    line-height: 0.88;
+    text-wrap: balance;
+  }
+
+  .label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .numeral {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -0.055em;
+  }
+
+  .measure {
+    max-width: 66ch;
+  }
+
+  .text-stroke {
+    color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+  }
+
+  .squiggle-path {
+    animation: draw-path 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .prose-legal {
+    color: var(--muted);
+    font-size: 1.0625rem;
+    line-height: 1.72;
+  }
+
+  .prose-legal h2 {
+    color: var(--ink);
+    font-size: 1.5rem;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    margin-top: 2.75rem;
+    scroll-margin-top: 7rem;
+  }
+
+  .prose-legal h3 {
+    color: var(--ink);
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .prose-legal p {
+    margin-bottom: 1.1rem;
+  }
+
+  .prose-legal ul,
+  .prose-legal ol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0 0 1.3rem 1.35rem;
+  }
+
+  .prose-legal ul {
+    list-style: disc;
+  }
+
+  .prose-legal ol {
+    list-style: decimal;
+  }
+
+  .prose-legal li::marker {
+    color: var(--brand);
+  }
+
+  .prose-legal strong {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .prose-legal a {
+    color: var(--brand-strong);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose-legal hr {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 2.5rem 0;
+  }
+
+  .prose-legal table {
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+
+  .prose-legal th,
+  .prose-legal td {
+    border: 1px solid var(--line);
+    padding: 0.6rem 0.85rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose-legal th {
+    background: var(--surface-2);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .prose-legal code {
+    background: var(--surface-2);
+    border-radius: 0.3rem;
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+  }
+}
+
+@keyframes draw-path {
+  from {
+    stroke-dashoffset: 520;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
