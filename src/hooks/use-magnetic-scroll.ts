@@ -32,20 +32,20 @@ const ARRIVED = 2;
 /**
  * How far from a chapter's centre the pull reaches, as a share of the viewport.
  *
- * Wide enough that the reaches overlap, so wherever you stop there is always a
- * chapter wanting to pull you square. A shorter reach left a band in the middle
- * of every boundary where nothing pulled at all, and stopping there felt like
- * the page had given up on you rather than left you alone.
+ * Deliberately short of overlapping: stopping in the middle of a boundary
+ * leaves you exactly where you stopped. The pull is for when you were clearly
+ * headed somewhere, not a claim on every pixel of the page, and the furthest
+ * it can carry you unprompted stays under half a screen.
  */
-const REACH = 0.62;
+const REACH = 0.45;
 
 /** Quiet time after the last input before the page is allowed to settle. */
-const REST_MS = 90;
+const REST_MS = 150;
 
-/** Spring for the settle. Heavy, and just underdamped enough to give. */
-const STIFFNESS = 110;
-const DAMPING = 19;
-const MASS = 1.25;
+/** Spring for the settle. Heavy, slow, and just underdamped enough to give. */
+const STIFFNESS = 70;
+const DAMPING = 15;
+const MASS = 1.3;
 
 type Target = { centre: number; weight: number };
 

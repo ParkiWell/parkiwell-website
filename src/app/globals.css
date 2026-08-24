@@ -339,6 +339,16 @@
     animation: draw-path 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
+  /*
+   * The header opens the page-load choreography: it drops in just before the
+   * headline rises (see the hero's timing map). CSS rather than JavaScript so
+   * it plays from the first paint, and the reduced-motion block below
+   * collapses it to its finished state.
+   */
+  .header-enter {
+    animation: header-drop 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  }
+
   .prose-legal {
     color: var(--muted);
     font-size: 1.0625rem;
@@ -439,6 +449,17 @@
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes header-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-1.1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

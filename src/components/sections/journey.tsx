@@ -30,15 +30,15 @@ const steps: Step[] = [
   {
     label: "A quick check-in",
     title: "Notice how today feels",
-    body: "See symptom and medication activity together, then add a note when you want to remember more context.",
+    body: "See your symptoms and medications side by side, and add a note whenever something feels worth remembering.",
     screen: screens.home,
     alt: "The Home screen showing symptom activity, medication activity, and a personal pattern summary.",
     icon: Heart,
   },
   {
     label: "Medication time",
-    title: "Keep the next dose close",
-    body: "Schedules and doses live beside everything due today, with reminders ready when you choose to set them.",
+    title: "Stay on top of doses",
+    body: "Your schedule sits alongside everything due today, with reminders you can turn on whenever you want them.",
     screen: screens.manage,
     alt: "The Manage screen showing medications due today and medication tools.",
     icon: Pill,
@@ -46,7 +46,7 @@ const steps: Step[] = [
   {
     label: "A practice moment",
     title: "Practice at your pace",
-    body: "Set a weekly goal for speech and movement. ParkiWell brings the next session forward and keeps what you have done together.",
+    body: "Set a weekly goal for speech and movement practice. ParkiWell lines up your next session and keeps track of what you have completed.",
     screen: screens.recovery,
     alt: "The Recovery screen showing a weekly practice goal and a chair workout ready to begin.",
     icon: Play,
@@ -54,7 +54,7 @@ const steps: Step[] = [
   {
     label: "Helpful resources",
     title: "Keep support within reach",
-    body: "The Community area gathers research, educational videos, specialist links, events, helplines, and daily living guides in one place.",
+    body: "The Community area collects research, educational videos, specialist directories, events, helplines, and daily living guides in one place.",
     screen: screens.community,
     alt: "The Community screen showing research, videos, specialist links, events, helplines, and daily living guides.",
     icon: Person,
@@ -73,39 +73,13 @@ function subscribeToTheme(onChange: () => void) {
 const readDarkTheme = () =>
   document.documentElement.getAttribute("data-theme") === "dark";
 
-function StepCopy({
-  item,
-  index,
-  progress,
-}: {
-  item: Step;
-  index: number;
-  progress: MotionValue<number>;
-}) {
-  const opacity = useTransform(progress, (value) =>
-    stagePresence(value, index, steps.length),
-  );
-  const y = useTransform(progress, (value) =>
-    stageOffset(value, index, steps.length, 22),
-  );
-
-  return (
-    <motion.article
-      style={{ opacity, y }}
-      className="col-start-1 row-start-1 self-center"
-    >
-      <p className="label text-ink/70">{item.label}</p>
-      <h3 className="display mt-4 max-w-[9ch] text-[clamp(3.3rem,6.3vw,6.2rem)] text-ink">
-        {item.title}
-      </h3>
-      <p className="mt-7 max-w-[35rem] text-[1.08rem] font-semibold leading-relaxed text-ink/75 xl:text-[1.22rem]">
-        {item.body}
-      </p>
-    </motion.article>
-  );
-}
-
-function StepVisual({
+/**
+ * One whole step of the pinned sequence: copy and phone move as a single
+ * surface. A step slides in from the right and leaves to the left, so the
+ * scroll reads as paging through the day rather than swapping paragraphs
+ * inside a fixed frame.
+ */
+function StepPanel({
   item,
   index,
   progress,
@@ -117,21 +91,84 @@ function StepVisual({
   const presence = useTransform(progress, (value) =>
     stagePresence(value, index, steps.length),
   );
-  const y = useTransform(progress, (value) =>
-    stageOffset(value, index, steps.length, 24),
+  const x = useTransform(progress, (value) =>
+    stageOffset(value, index, steps.length, 160),
   );
-  const scale = useTransform(presence, [0, 1], [0.975, 1]);
+  // An invisible layer still sits above its neighbours, so take it out of the
+  // page entirely once it has fully handed over.
+  const visibility = useTransform(presence, (value) =>
+    value < 0.01 ? ("hidden" as const) : ("visible" as const),
+  );
+
   return (
     <motion.div
-      style={{ opacity: presence, y, scale }}
-      className="absolute inset-0 overflow-hidden"
+      style={{ opacity: presence, x, visibility }}
+      className="absolute inset-0 grid grid-cols-[1.08fr_0.92fr] items-center gap-12 xl:gap-20"
     >
-      <ThemedPhoneScreen
-        screen={item.screen}
-        alt={item.alt}
-        sizes="336px"
-      />
+      <article>
+        <p className="label text-ink/70">{item.label}</p>
+        <h3 className="display mt-4 max-w-[9ch] text-[clamp(3.3rem,6.3vw,6.2rem)] text-ink">
+          {item.title}
+        </h3>
+        <p className="mt-7 max-w-[35rem] text-[1.08rem] font-semibold leading-relaxed text-ink/75 xl:text-[1.22rem]">
+          {item.body}
+        </p>
+      </article>
+      <div className="flex h-full min-h-0 items-center justify-center">
+        <div className="w-[min(20rem,39vh)]">
+          <PhoneFrame>
+            <ThemedPhoneScreen screen={item.screen} alt={item.alt} sizes="336px" />
+          </PhoneFrame>
+        </div>
+      </div>
     </motion.div>
+  );
+}
+
+/**
+ * A step button is also that step's progress: the track under the label fills
+ * across exactly the stretch of scroll the step owns, so the row reads as four
+ * segments of one journey rather than four dots.
+ */
+function StepButton({
+  item,
+  index,
+  active,
+  progress,
+  onJump,
+}: {
+  item: Step;
+  index: number;
+  active: boolean;
+  progress: MotionValue<number>;
+  onJump: (index: number) => void;
+}) {
+  const fill = useTransform(progress, (value) =>
+    Math.min(1, Math.max(0, value * steps.length - index)),
+  );
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onJump(index)}
+        aria-label={`Go to ${item.label}`}
+        aria-current={active ? "step" : undefined}
+        className={`group flex w-full flex-col gap-3 rounded-lg py-1 text-left transition-opacity duration-300 ${
+          active ? "opacity-100" : "opacity-50 hover:opacity-85"
+        }`}
+      >
+        <span className="hidden font-display text-sm font-extrabold xl:block">
+          {item.label}
+        </span>
+        <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-ink/15">
+          <motion.span
+            style={{ scaleX: fill }}
+            className="absolute inset-0 origin-left rounded-full bg-ink"
+          />
+        </span>
+      </button>
+    </li>
   );
 }
 
@@ -323,59 +360,27 @@ export function Journey() {
               </p>
             </div>
 
-            <div className="grid min-h-0 flex-1 grid-cols-[1.08fr_0.92fr] items-center gap-12 xl:gap-20">
-              <div className="grid">
-                {steps.map((item, index) => (
-                  <StepCopy
-                    key={item.label}
-                    item={item}
-                    index={index}
-                    progress={smoothProgress}
-                  />
-                ))}
-              </div>
-              <div className="flex h-full min-h-0 items-center justify-center">
-                <div className="w-[min(20rem,39vh)]">
-                  <PhoneFrame>
-                    <div className="relative aspect-[680/1477] bg-[#f1f4fb] transition-colors duration-300 dark:bg-[#070b15]">
-                      {steps.map((item, index) => (
-                        <StepVisual
-                          key={item.label}
-                          item={item}
-                          index={index}
-                          progress={smoothProgress}
-                        />
-                      ))}
-                    </div>
-                  </PhoneFrame>
-                </div>
-              </div>
+            <div className="relative min-h-0 flex-1">
+              {steps.map((item, index) => (
+                <StepPanel
+                  key={item.label}
+                  item={item}
+                  index={index}
+                  progress={smoothProgress}
+                />
+              ))}
             </div>
 
-            <ol className="grid grid-cols-4 border-t border-ink/20 pt-4">
+            <ol className="grid grid-cols-4 gap-4 pt-4 sm:gap-6">
               {steps.map((item, index) => (
-                <li key={item.label}>
-                  <button
-                    type="button"
-                    onClick={() => jumpTo(index)}
-                    aria-label={`Go to ${item.label}`}
-                    aria-current={active === index ? "step" : undefined}
-                    className={`group flex w-full items-center gap-3 rounded-lg text-left transition-opacity duration-200 ${
-                      active === index
-                        ? "opacity-100"
-                        : "opacity-45 hover:opacity-80"
-                    }`}
-                  >
-                    <span
-                      className={`h-3 w-3 rounded-full border-2 border-ink transition-colors duration-200 ${
-                        active === index ? "bg-ink" : "bg-transparent"
-                      }`}
-                    />
-                    <span className="hidden font-display text-sm font-extrabold xl:inline">
-                      {item.label}
-                    </span>
-                  </button>
-                </li>
+                <StepButton
+                  key={item.label}
+                  item={item}
+                  index={index}
+                  active={active === index}
+                  progress={smoothProgress}
+                  onJump={jumpTo}
+                />
               ))}
             </ol>
           </Container>

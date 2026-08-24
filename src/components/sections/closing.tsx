@@ -27,14 +27,14 @@ export function Closing() {
             transition={{ duration: still ? 0 : 0.75, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="label flex items-center gap-3 text-ink/60">
-              <Mark className="h-5 w-5" /> One more thing
+              <Mark className="h-5 w-5" /> Launching soon
             </p>
             <h2 className="display mt-6 max-w-[8ch] text-[clamp(3.6rem,8vw,7.4rem)]">
-              Keep your day close.
+              Be first to know.
             </h2>
             <p className="mt-7 max-w-[34rem] text-[1.12rem] font-semibold leading-relaxed text-ink/75">
-              Coming to iPhone and Android. Leave an address and we will tell
-              you the day it lands.
+              ParkiWell is coming to iPhone and Android. Leave your email and
+              we will send one message when it is ready to download.
             </p>
             <LaunchList className="mt-9" />
           </motion.div>

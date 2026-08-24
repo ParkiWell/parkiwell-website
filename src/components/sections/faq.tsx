@@ -14,14 +14,14 @@ const questions = [
       "Yes. Records live on your device and stay available offline. An optional account queues offline changes until a connection returns.",
   },
   {
-    question: "What is planned for the movement coach?",
+    question: "What does the movement coach do?",
     answer:
-      "The movement coach is in development for a future release. The vision is to guide focused movement sessions, count repetitions when useful, and share observations on your phone. A seated arm raise check is one early concept within that broader direction.",
+      "The movement coach, still in development, guides seated and standing exercise sessions through your phone's camera. As you move, it suggests small adjustments, like making the next repetition a little larger or keeping a steadier pace, and when you finish it summarizes how the session went. Tracking runs on your device, and the camera feed is never recorded or uploaded.",
   },
   {
     question: "Is ParkiWell a medical device?",
     answer:
-      "ParkiWell is an organizational and educational tool. It does not provide medical advice, diagnosis, or treatment. Any future movement observations will describe a single practice session.",
+      "ParkiWell is an organizational and educational tool. It does not provide medical advice, diagnosis, or treatment. Movement coach observations describe a single practice session; they do not measure symptoms or track your condition.",
   },
   {
     question: "Where do guided sessions come from?",
@@ -59,8 +59,8 @@ export function Faq() {
               Ask away.
             </h2>
             <p className="mt-7 max-w-[29rem] text-[1.1rem] font-semibold leading-relaxed text-muted">
-              Real questions deserve plain answers. A person reads every
-              support message, too.
+              Straight answers to the questions we hear most. If yours is not
+              here, send it over: a person reads every support message.
             </p>
             <Link
               href="/support"

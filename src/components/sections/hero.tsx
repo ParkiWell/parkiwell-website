@@ -16,6 +16,24 @@ import { useStillness } from "@/hooks/use-stillness";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+/**
+ * One entrance, one clock. Everything in the hero keys off these moments so
+ * the page opens as a single choreographed reveal rather than a set of
+ * elements each doing their own thing. The header bar drops in first (a CSS
+ * animation in globals.css, on the same easing family), the headline rises
+ * out of its masks, and everything else follows in reading order while the
+ * phone comes into focus alongside the copy.
+ */
+const at = {
+  badge: 0.25,
+  line1: 0.35,
+  line2: 0.5,
+  lede: 0.72,
+  actions: 0.86,
+  proof: 1.0,
+  phone: 0.55,
+} as const;
+
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
   // Every animated value below stays wired up whether or not the visitor asked
@@ -24,8 +42,9 @@ export function Hero() {
   const still = useStillness();
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
-  const tiltX = useSpring(pointerX, { stiffness: 90, damping: 18 });
-  const tiltY = useSpring(pointerY, { stiffness: 90, damping: 18 });
+  // Lazier than the pointer: the phone leans after your hand, not with it.
+  const tiltX = useSpring(pointerX, { stiffness: 55, damping: 16 });
+  const tiltY = useSpring(pointerY, { stiffness: 55, damping: 16 });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -63,9 +82,9 @@ export function Hero() {
             className="relative z-10"
           >
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 0.75, ease }}
+              transition={{ duration: still ? 0 : 1, delay: still ? 0 : at.badge, ease }}
               className="mb-7 inline-flex items-center gap-2 rounded-full border border-ink/15 bg-surface px-4 py-2 text-sm font-extrabold text-ink shadow-card"
             >
               <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
@@ -75,20 +94,20 @@ export function Hero() {
             <h1 className="display max-w-[9ch] text-[clamp(3.8rem,10vw,8.3rem)] text-ink">
               <span className="block overflow-hidden pb-[0.08em]">
                 <motion.span
-                  className="block"
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: still ? 0 : 0.95, delay: still ? 0 : 0.05, ease }}
+                  className="block origin-bottom-left"
+                  initial={{ y: "112%", rotate: 2.5 }}
+                  animate={{ y: 0, rotate: 0 }}
+                  transition={{ duration: still ? 0 : 1.45, delay: still ? 0 : at.line1, ease }}
                 >
                   Your day,
                 </motion.span>
               </span>
               <span className="block overflow-hidden pb-[0.08em] text-brand">
                 <motion.span
-                  className="block"
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: still ? 0 : 0.95, delay: still ? 0 : 0.13, ease }}
+                  className="block origin-bottom-left"
+                  initial={{ y: "112%", rotate: 2.5 }}
+                  animate={{ y: 0, rotate: 0 }}
+                  transition={{ duration: still ? 0 : 1.45, delay: still ? 0 : at.line2, ease }}
                 >
                   in rhythm.
                 </motion.span>
@@ -96,41 +115,40 @@ export function Hero() {
             </h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 0.6, delay: still ? 0 : 0.16, ease }}
+              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.lede, ease }}
               className="mt-7 max-w-[38rem] text-[1.1rem] font-medium leading-relaxed text-muted sm:text-[1.25rem]"
             >
-              ParkiWell keeps the small care moments close. Daily records and
-              medication routines share one clear home. Guided practice stays
-              ready, even offline.
+              ParkiWell brings symptom notes, medication schedules, and guided
+              practice together in one place, and it all works offline.
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 0.6, delay: still ? 0 : 0.28, ease }}
+              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.actions, ease }}
               className="mt-9 flex flex-col gap-3 sm:flex-row"
             >
               <a
                 href="#get"
                 className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-ink px-7 font-extrabold text-bg transition-transform duration-200 hover:-translate-y-1"
               >
-                Tell me when it launches
+                Get notified at launch
                 <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
               </a>
               <a
                 href="#day"
                 className="inline-flex min-h-14 items-center justify-center rounded-full border border-ink/20 bg-surface px-7 font-extrabold text-ink transition-colors duration-300 hover:bg-brand-soft"
               >
-                Take the tour
+                See how it works
               </a>
             </motion.div>
 
             <motion.ul
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: still ? 0 : 0.6, delay: still ? 0 : 0.4 }}
+              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.proof }}
               className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-[0.92rem] font-bold text-muted"
             >
               <li className="flex items-center gap-2">
@@ -157,9 +175,9 @@ export function Hero() {
                 rotateY: tiltY,
                 transformPerspective: 900,
               }}
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 1.1, delay: still ? 0 : 0.2, ease }}
+              initial={{ opacity: 0, y: 56, scale: 0.95, filter: "blur(14px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: still ? 0 : 1.7, delay: still ? 0 : at.phone, ease }}
               className="absolute left-1/2 top-[2%] z-10 w-[17rem] -translate-x-1/2 sm:w-[19rem] lg:w-[min(21rem,34vh)]"
             >
               <PhoneFrame>

@@ -147,7 +147,7 @@ test("reduced motion renders the full story without pinning", async ({
     page.getByText("Keep support within reach").first(),
   ).toBeVisible();
   await expect(
-    page.getByText("Exploring a future movement coach.").first(),
+    page.getByText("A coach that helps you improve.").first(),
   ).toBeVisible();
 
   await context.close();
@@ -470,13 +470,14 @@ test.describe("scroll gravity", () => {
     await page.waitForTimeout(600);
 
     await page.evaluate(() => window.scrollTo({ top: 1200, behavior: "instant" }));
-    await page.waitForTimeout(140); // the settle is now under way
+    await page.waitForTimeout(300); // past the rest window: the settle is under way
     await page.mouse.wheel(0, 600);
-    const interrupted = await page.evaluate(() => window.scrollY);
-    await page.waitForTimeout(120);
+    // The wheel lands, over however many frames the browser takes to apply it.
+    await page.waitForFunction(() => window.scrollY > 1200);
+    await page.waitForTimeout(400);
 
-    // Whatever happens next, the wheel took effect rather than being undone.
-    expect(interrupted).toBeGreaterThan(1200);
+    // And it stays landed: no settle quietly drags the page back up.
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1200);
   });
 
   test("the day step buttons come to rest where the steps settle", async ({

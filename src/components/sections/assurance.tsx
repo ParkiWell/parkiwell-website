@@ -49,11 +49,11 @@ export function Assurance() {
                 <Lock className="h-4 w-4" /> Chapter 02&nbsp; / &nbsp;Privacy
               </p>
               <h2 className="display mt-7 max-w-[8ch] text-[clamp(4rem,8vw,7.2rem)]">
-                Your day stays yours.
+                Your data stays yours.
               </h2>
               <p className="mt-8 max-w-[34rem] text-[1.12rem] font-semibold leading-relaxed opacity-75 sm:text-[1.25rem]">
-                Health information deserves a quiet place. ParkiWell keeps your
-                records close and gives you control over optional sync.
+                Health records are personal. ParkiWell stores yours on your
+                device, and syncing them anywhere else is always your choice.
               </p>
               <Link
                 href="/privacy"
