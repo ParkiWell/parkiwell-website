@@ -452,6 +452,36 @@
   }
 }
 
+@keyframes arm-lift {
+  0%,
+  8% {
+    transform: rotate(0deg);
+  }
+  46%,
+  58% {
+    transform: rotate(70deg);
+  }
+  96%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes arm-lift-right {
+  0%,
+  8% {
+    transform: rotate(0deg);
+  }
+  46%,
+  58% {
+    transform: rotate(-70deg);
+  }
+  96%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 @keyframes header-drop {
   from {
     opacity: 0;
@@ -524,8 +554,9 @@
     text-decoration-color: currentColor;
   }
 
+  /* Matches HERO_SVH in src/lib/story.ts, which the story layer reads. */
   .hero-chapter {
-    height: 280svh;
+    height: 200svh;
   }
   .hero-viewport {
     position: sticky;
@@ -563,15 +594,13 @@
     height: min(76svh, 51rem);
     perspective: 1400px;
   }
-  .hero-device-entrance {
+  .hero-inline-device {
     position: relative;
     z-index: 2;
     width: min(22vw, 34svh, 22rem);
-    perspective: 1400px;
   }
-  .hero-device-tilt,
   .hero-device {
-    transform-style: preserve-3d;
+    transform: rotateY(-12deg) rotateZ(6deg);
   }
   .hero-orbit {
     position: absolute;
@@ -614,16 +643,11 @@
     border-radius: 50%;
     background: var(--brand);
   }
-  .hero-end-copy {
-    position: absolute;
-    left: 54%;
-    top: 32%;
-    width: 43%;
-    pointer-events: auto;
-  }
-  .hero-bottom {
+  .hero-bottom-fade {
     position: absolute;
     inset: auto 0 0;
+  }
+  .hero-bottom {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -666,24 +690,55 @@
     border-radius: 2px;
     background: #617779;
   }
-  .journey-stage {
-    perspective: 1500px;
+  /*
+   * The story layer: one phone, sticky across the hero and the tour.
+   *
+   * The track is laid over the whole story, out of flow, and the layer is
+   * sticky inside it, so the phone pins while either chapter is on screen and
+   * leaves exactly with the tour. (A negative margin would do the same job in
+   * the flow, but sticky keeps an element's margin box in its container, and
+   * a negative margin empties that box: the layer overstayed by a screen.)
+   * Hidden except on the large, unhurried screens where the two chapters pin
+   * at all; everywhere else each chapter keeps its own phone.
+   */
+  .story-device-track {
+    display: none;
   }
-  .journey-device {
+  .story-device__stage {
+    position: relative;
+    height: 100%;
+    perspective: 1400px;
+  }
+  .story-device__orbit,
+  .story-device__phone {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+  }
+  .story-device__phone {
+    width: min(24rem, 33svh);
     transform-style: preserve-3d;
   }
-  .journey-orbit {
-    position: absolute;
-    right: -8%;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
+  .story-device__tilt {
+    transform-style: preserve-3d;
   }
-  .journey-orbit .orbit-sculpture {
-    --sculpture-size: min(51vw, 48rem);
+  .story-device__orbit .orbit-sculpture {
+    --sculpture-size: min(48vw, 46rem);
   }
-  .journey-orbit .orbit-sculpture__ring {
-    border-color: color-mix(in srgb, var(--ink) 13%, transparent);
+  /* Copy, a column kept clear for the phone above, and the rail. */
+  .journey-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(24rem, 33svh) minmax(0, 1fr);
+    column-gap: clamp(2rem, 4vw, 4.5rem);
+    align-items: center;
+  }
+  .journey-rail {
+    justify-self: end;
+    width: min(100%, 14rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
   .journey-feature {
     display: flex;
@@ -726,10 +781,24 @@
   .hero-orbit {
     transform: none !important;
   }
-  .hero-device {
-    transform: rotateY(-12deg) rotateZ(6deg) !important;
+}
+
+@media (min-width: 1024px) and (min-height: 651px) and (prefers-reduced-motion: no-preference) {
+  .story-device-track {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
   }
-  .hero-end-copy {
+  .story-device {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+  .hero-scene > .hero-orbit,
+  .hero-scene > .hero-inline-device {
     display: none;
   }
 }
@@ -750,7 +819,7 @@
     height: 38rem;
     margin-top: 2rem;
   }
-  .hero-device-entrance {
+  .hero-inline-device {
     width: 16rem;
   }
   .orbit-sculpture {
@@ -785,15 +854,12 @@
     height: 33rem;
     margin-top: 1.5rem;
   }
-  .hero-device-entrance {
+  .hero-inline-device {
     width: 13rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-device-tilt {
-    transform: none !important;
-  }
   .orbit-sculpture__geometry {
     transform: rotateX(62deg) rotateZ(-18deg) !important;
   }
@@ -801,7 +867,7 @@
 
 @layer components {
   .coach-chapter {
-    height: 165svh;
+    height: 200svh;
   }
   .coach-viewport {
     position: sticky;
@@ -850,6 +916,23 @@
   }
   .movement-plane-front svg {
     transform: translateZ(15px);
+  }
+  /*
+   * The arms lift and lower on their own clock. Driving them from the scroll
+   * made every wheel notch a jerk, and a pause mid-chapter let the page's
+   * gravity drop them again. A slow loop reads as practice, and it looks
+   * finished wherever the page comes to rest.
+   */
+  .movement-arm {
+    transform-box: view-box;
+    animation: arm-lift 9s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
+  }
+  .movement-arm--left {
+    transform-origin: 106px 109px;
+  }
+  .movement-arm--right {
+    transform-origin: 174px 109px;
+    animation-name: arm-lift-right;
   }
   .movement-floor {
     position: absolute;
@@ -904,9 +987,6 @@
   .movement-floor-rings {
     transform: none !important;
   }
-  .movement-plane-front svg g {
-    transform: none !important;
-  }
 }
 @media (max-width: 1023px) {
   .movement-scene {
@@ -942,33 +1022,50 @@
   .closing-chapter {
     min-height: 100svh;
     display: flex;
-    align-items: center;
-    padding: 7rem 0;
+    flex-direction: column;
+    padding: 9rem 0 0;
   }
-  .closing-layout {
-    display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: 4rem;
-    align-items: center;
-  }
-  .closing-scene {
+  /*
+   * Three screens rise out of the foot of the chapter and spread. They are
+   * large and sunk deep, so they read as the app arriving rather than three
+   * more phones, and they are sized in svh so that the part of them that
+   * shows fits under the copy in one screen: the chapter is one viewport
+   * tall at rest, and its foot is the bottom edge of the screen.
+   */
+  .closing-fan {
+    --fan-sink: 26svh;
     position: relative;
+    flex: 1;
+    min-height: 40svh;
+    margin-top: 2rem;
     display: grid;
-    place-items: center;
-    height: 45rem;
-    perspective: 1400px;
-  }
-  .closing-device {
-    width: min(20rem, 33svh);
-    transform-style: preserve-3d;
+    place-items: end center;
   }
   .closing-orbit {
     position: absolute;
+    left: 50%;
+    bottom: -8rem;
     pointer-events: none;
-    transform: rotate(-25deg);
+    transform: translateX(-50%) rotate(-25deg);
   }
   .closing-orbit .orbit-sculpture {
-    --sculpture-size: min(46vw, 44rem);
+    --sculpture-size: min(44vw, 40rem);
+  }
+  .closing-phone {
+    position: absolute;
+    bottom: calc(-1 * var(--fan-sink));
+    width: min(18rem, 30svh);
+    transform-origin: 50% 100%;
+    will-change: transform;
+  }
+  .closing-phone--centre {
+    z-index: 2;
+  }
+  .closing-phone--left,
+  .closing-phone--right {
+    z-index: 1;
+    bottom: calc(-1 * var(--fan-sink) - 4svh);
+    width: min(15.5rem, 26svh);
   }
   .footer-wordmark {
     font-family: var(--font-display);
@@ -990,29 +1087,54 @@
     position: relative;
     top: auto;
   }
-  .closing-layout {
-    grid-template-columns: 1fr;
-    gap: 3rem;
+  .closing-chapter {
+    padding-top: 8rem;
   }
-  .closing-scene {
-    height: 36rem;
+  .closing-fan {
+    --fan-sink: 22svh;
+    min-height: 34svh;
   }
-  .closing-device {
-    width: 15rem;
+  .closing-phone {
+    width: min(13rem, 26svh);
+  }
+  .closing-phone--left,
+  .closing-phone--right {
+    width: min(11rem, 22svh);
   }
   .closing-orbit .orbit-sculpture {
-    --sculpture-size: min(85vw, 35rem);
+    --sculpture-size: min(70vw, 30rem);
   }
 }
 @media (max-width: 639px) {
   .closing-chapter {
-    padding: 6rem 0 4rem;
+    padding-top: 7rem;
   }
-  .closing-scene {
-    height: 32rem;
+  .closing-fan {
+    --fan-sink: 7rem;
+    min-height: 15rem;
+    margin-top: 1.5rem;
   }
-  .closing-device {
-    width: 13rem;
+  .closing-orbit {
+    bottom: -3rem;
+  }
+  .closing-orbit .orbit-sculpture {
+    --sculpture-size: min(80vw, 30rem);
+  }
+  .closing-phone {
+    width: min(9.5rem, 20svh);
+  }
+  /* Small phones need a tighter corner, or they read as capsules. */
+  .closing-phone .phone-frame {
+    border-radius: 1.6rem;
+    padding: 0.3rem;
+  }
+  .closing-phone .phone-frame > div {
+    border-radius: 1.3rem;
+  }
+  .closing-phone--left,
+  .closing-phone--right {
+    bottom: calc(-1 * var(--fan-sink) - 1.5rem);
+    width: min(8rem, 17svh);
   }
   .footer-wordmark {
     padding-bottom: 2.5rem;
@@ -1039,16 +1161,16 @@
   .hero-orbit {
     transform: none !important;
   }
-  .hero-end-copy,
-  .hero-end-settle,
+  .story-device-track,
   .journey-pinned {
     display: none !important;
   }
-  .journey-stacked {
+  .hero-scene > .hero-orbit,
+  .hero-scene > .hero-inline-device {
     display: block !important;
   }
-  .hero-device {
-    transform: rotateY(-12deg) rotateZ(6deg) !important;
+  .journey-stacked {
+    display: block !important;
   }
 }
 
@@ -1069,11 +1191,11 @@
   .hero-scene {
     height: calc(100svh - 11rem);
   }
-  .hero-device-entrance {
-    width: min(22vw, 31svh, 22rem);
+  .story-device__phone {
+    width: min(24rem, 31svh);
   }
-  .hero-end-copy {
-    top: 29%;
+  .journey-grid {
+    grid-template-columns: minmax(0, 1fr) min(24rem, 31svh) minmax(0, 1fr);
   }
   .coach-viewport {
     padding-top: 7rem;
@@ -1099,15 +1221,18 @@
   }
   .hero-copy,
   .hero-copy *,
-  .hero-device-entrance {
+  .hero-inline-device {
     opacity: 1 !important;
     visibility: visible !important;
     transform: none !important;
   }
-  .hero-end-copy,
-  .hero-end-settle,
+  .story-device-track,
   .journey-pinned {
     display: none !important;
+  }
+  .hero-scene > .hero-orbit,
+  .hero-scene > .hero-inline-device {
+    display: block !important;
   }
   .journey-stacked {
     display: block !important;

@@ -58,6 +58,22 @@ export function stagePresence(progress: number, index: number, total: number) {
   return Math.min(entering, leaving);
 }
 
+/**
+ * 0 before the handover into a stage begins, 1 once it has finished, and 1
+ * from then on. It spans the whole handover: the outgoing stage's leave and
+ * this stage's enter together, so its midpoint (0.5) is the moment the copy is
+ * changing over and `stageIndex` switches. The phone's screens run on it, so
+ * the screen, the copy, and the rail all turn over at the same time.
+ */
+export function stageHandover(progress: number, index: number, total: number) {
+  const b = bounds(index, total);
+  if (b.first) return 1;
+  const previous = bounds(index - 1, total);
+  return smooth(
+    (progress - previous.leaveFrom) / (b.enterTo - previous.leaveFrom),
+  );
+}
+
 /** Vertical offset that matches the presence curve: in from below, out upward. */
 export function stageOffset(
   progress: number,

@@ -3,8 +3,7 @@ import { Assurance } from "@/components/sections/assurance";
 import { Closing } from "@/components/sections/closing";
 import { FutureMovementCoach } from "@/components/sections/coach";
 import { Faq } from "@/components/sections/faq";
-import { Hero } from "@/components/sections/hero";
-import { Journey } from "@/components/sections/journey";
+import { Story } from "@/components/sections/story";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -16,8 +15,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <Hero />
-      <Journey />
+      <Story />
       <Assurance />
       <FutureMovementCoach />
       <Faq />

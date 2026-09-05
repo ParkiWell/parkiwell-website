@@ -94,8 +94,10 @@ test("chapter screenshots are decoded before a theme switch", async ({
   await page.goto("/", { waitUntil: "networkidle" });
 
   // Screenshot filenames carry a content hash, so match the shape not a name.
+  // One in the hero, five in the story layer's phone, four in the stacked
+  // tour, and three in the closing fan.
   const darkScreens = page.locator('img[src*="-dark-"][src*=".webp"]');
-  await expect(darkScreens).toHaveCount(10);
+  await expect(darkScreens).toHaveCount(13);
 
   for (let index = 0; index < (await darkScreens.count()); index += 1) {
     const screen = darkScreens.nth(index);
@@ -511,6 +513,97 @@ test.describe("scroll gravity", () => {
         Math.abs(at - ruler),
         `step ${index + 1} rests where it settles`,
       ).toBeLessThanOrEqual(2);
+    }
+  });
+});
+
+test.describe("the story layer", () => {
+  // The hero and the tour share one phone. It has to be the same phone: it
+  // lands in the middle of the screen as the hero's copy leaves, and it is
+  // still there, unmoved, once the tour has arrived under it.
+  test("the phone stays put while the tour arrives", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const heroHeight = await page.evaluate(
+      () => document.querySelector("[data-chapter='hero']")!.clientHeight,
+    );
+    const centreAt = async (top: number) => {
+      await page.evaluate(
+        (y) => window.scrollTo({ top: y, behavior: "instant" }),
+        top,
+      );
+      await page.waitForTimeout(1200);
+      return page.evaluate(() => {
+        const box = document
+          .querySelector(".story-device__phone")!
+          .getBoundingClientRect();
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      });
+    };
+
+    const landed = await centreAt(heroHeight * 0.8);
+    const arrived = await centreAt(heroHeight + 200);
+
+    expect(Math.abs(landed.x - 1280 / 2)).toBeLessThan(2);
+    expect(Math.abs(arrived.x - landed.x)).toBeLessThan(2);
+    expect(Math.abs(arrived.y - landed.y)).toBeLessThan(2);
+    await expect(
+      page.locator("h3:visible", { hasText: "Review your symptoms" }),
+    ).toBeVisible();
+
+    // And it leaves with the tour. A sticky layer pulled over its siblings by
+    // a negative margin overstayed by a screen and hung over the privacy
+    // chapter, which is why the layer sits in a track of its own.
+    const privacyTop = await page.evaluate(() => {
+      const box = document.querySelector("#privacy")!.getBoundingClientRect();
+      return box.top + window.scrollY;
+    });
+    await page.evaluate(
+      (y) => window.scrollTo({ top: y, behavior: "instant" }),
+      privacyTop,
+    );
+    await page.waitForTimeout(400);
+    const gone = await page.evaluate(
+      () =>
+        document.querySelector(".story-device__phone")!.getBoundingClientRect()
+          .bottom,
+    );
+    expect(
+      gone,
+      "the phone has scrolled away above the privacy chapter",
+    ).toBeLessThan(0);
+  });
+
+  // The tour's panel has to be able to sit above its own top edge while it
+  // slides in, and nothing it holds may spill out sideways.
+  test("nothing spills sideways at any point in the handover", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "pinned layout is desktop");
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    for (const fraction of [0, 0.3, 0.55, 0.8, 1.1]) {
+      await page.evaluate(
+        (f) =>
+          window.scrollTo({
+            top:
+              document.querySelector("[data-chapter='hero']")!.clientHeight * f,
+            behavior: "instant",
+          }),
+        fraction,
+      );
+      await page.waitForTimeout(400);
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      expect(overflow, `no sideways scroll at ${fraction}`).toBeLessThanOrEqual(
+        1,
+      );
     }
   });
 });

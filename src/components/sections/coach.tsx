@@ -1,31 +1,17 @@
 "use client";
 
-import {
-  motion,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Camera, Lock } from "@/components/icons";
 import { Container } from "@/components/ui/container";
-import { useStillness } from "@/hooks/use-stillness";
 import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
-function MovementFigure({
-  progress,
-  still,
-}: {
-  progress: MotionValue<number>;
-  still: boolean;
-}) {
-  const leftArm = useTransform(
-    progress,
-    [0, 0.45, 0.75, 1],
-    still ? [0, 0, 0, 0] : [0, 76, 76, 0],
-  );
-  const rightArm = useTransform(leftArm, (value) => -value);
-
+/**
+ * The arms lift and lower on a slow loop in CSS (see `.movement-arm`), not on
+ * the scroll: a pose tied to the wheel jerked with every notch, and it fell
+ * back down whenever the page's gravity pulled the chapter back to its start.
+ */
+function MovementFigure() {
   return (
     <svg
       viewBox="0 0 280 300"
@@ -39,26 +25,14 @@ function MovementFigure({
       <circle cx="140" cy="64" r="22" strokeWidth="3" />
       <path d="M140 87v91M106 109h68M112 180h56" strokeWidth="3" />
       <path d="M114 180 102 239h50M166 180l12 59h-50" strokeWidth="3" />
-      <motion.g
-        style={{
-          rotate: leftArm,
-          transformBox: "view-box",
-          transformOrigin: "106px 109px",
-        }}
-      >
+      <g className="movement-arm movement-arm--left">
         <path d="M106 109 91 196" strokeWidth="3" />
         <circle cx="91" cy="196" r="5" fill="currentColor" stroke="none" />
-      </motion.g>
-      <motion.g
-        style={{
-          rotate: rightArm,
-          transformBox: "view-box",
-          transformOrigin: "174px 109px",
-        }}
-      >
+      </g>
+      <g className="movement-arm movement-arm--right">
         <path d="M174 109l15 87" strokeWidth="3" />
         <circle cx="189" cy="196" r="5" fill="currentColor" stroke="none" />
-      </motion.g>
+      </g>
       <g className="text-ink" fill="var(--surface)" strokeWidth="2">
         <circle cx="106" cy="109" r="5" />
         <circle cx="174" cy="109" r="5" />
@@ -74,15 +48,20 @@ function MovementFigure({
 
 export function FutureMovementCoach() {
   const ref = useRef<HTMLElement>(null);
-  const still = useStillness();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
-  const progress = useSequenceProgress(scrollYProgress, 0.08, 0.78);
-  const rotateY = useTransform(progress, [0, 1], [-20, 14]);
-  const rotateX = useTransform(progress, [0, 1], [7, -3]);
-  const ringRotate = useTransform(progress, [0, 1], [0, 65]);
+  // The only thing the scroll moves here is a slow turn of the stage, so it
+  // takes a heavier spring than the tour: each wheel notch eases it round
+  // rather than nudging it.
+  const progress = useSequenceProgress(scrollYProgress, 0.08, 0.8, {
+    stiffness: 70,
+    damping: 22,
+  });
+  const rotateY = useTransform(progress, [0, 1], [-16, 8]);
+  const rotateX = useTransform(progress, [0, 1], [5, -2]);
+  const ringRotate = useTransform(progress, [0, 1], [0, 48]);
 
   return (
     <section
@@ -91,8 +70,18 @@ export function FutureMovementCoach() {
       data-chapter="future"
       className="chapter coach-chapter relative text-ink"
     >
+      {/*
+        Both ends of the turn are places to rest. With only the start marked,
+        a pause part way through let the page pull the chapter back to where
+        it began, and the scene played backwards.
+      */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-[100svh]"
+        data-settle="1"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-[100svh] hidden h-[100svh] motion-safe:lg:block"
         data-settle="1"
         aria-hidden="true"
       />
@@ -154,7 +143,7 @@ export function FutureMovementCoach() {
                 <div className="movement-plane movement-plane-front">
                   <span className="movement-corner top-0 left-0" />
                   <span className="movement-corner right-0 bottom-0 rotate-180" />
-                  <MovementFigure progress={progress} still={still} />
+                  <MovementFigure />
                 </div>
               </motion.div>
               <div className="movement-scene-footer">

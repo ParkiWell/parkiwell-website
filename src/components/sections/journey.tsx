@@ -3,35 +3,41 @@
 import {
   motion,
   useMotionValueEvent,
-  useScroll,
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
 import { ArrowRight, Heart, Person, Pill, Play } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
-import { OrbitSculpture } from "@/components/ui/orbit-sculpture";
 import { Reveal } from "@/components/ui/reveal";
 import { stageIndex, stageOffset, stagePresence } from "@/lib/stages";
 import { screens } from "@/lib/screens";
+import { TRACK_SVH, settledAt } from "@/lib/story";
 import { dayTrack } from "@/lib/tones";
-import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
-type Step = {
+export type Step = {
   label: string;
   title: string;
   body: string;
+  feature: string;
   screen: (typeof screens)[keyof typeof screens];
   alt: string;
   icon: typeof Heart;
 };
 
-const steps: Step[] = [
+/** The four stops of the tour, in the order the phone visits them. */
+export const steps: Step[] = [
   {
     label: "Symptom records",
     title: "Review your symptoms",
     body: "View symptom and medication activity together, and record notes about changes you observe.",
+    feature: "Symptom and medication records",
     screen: screens.home,
     alt: "The Home screen showing symptom activity, medication activity, and a personal pattern summary.",
     icon: Heart,
@@ -40,6 +46,7 @@ const steps: Step[] = [
     label: "Medications",
     title: "Manage your medications",
     body: "Review your medication schedule and doses due today. Enable reminders as needed.",
+    feature: "Medication schedules and reminders",
     screen: screens.manage,
     alt: "The Manage screen showing medications due today and medication tools.",
     icon: Pill,
@@ -48,6 +55,7 @@ const steps: Step[] = [
     label: "Guided practice",
     title: "Plan your practice",
     body: "Set weekly goals for speech and movement practice, view your next session, and review completed sessions.",
+    feature: "Speech and movement sessions",
     screen: screens.recovery,
     alt: "The Recovery screen showing a weekly practice goal and a chair workout ready to begin.",
     icon: Play,
@@ -56,6 +64,7 @@ const steps: Step[] = [
     label: "Support resources",
     title: "Access support resources",
     body: "The Community area collects research, educational videos, specialist directories, events, helplines, and daily living guides in one place.",
+    feature: "Research, education, and support",
     screen: screens.community,
     alt: "The Community screen showing research, videos, specialist links, events, helplines, and daily living guides.",
     icon: Person,
@@ -75,8 +84,9 @@ const readDarkTheme = () =>
   document.documentElement.getAttribute("data-theme") === "dark";
 
 /**
- * Copy and hardware share a handoff, with less travel for the reading surface
- * and a perspective turn for the device. Neither overlaps the next stage.
+ * One step's reading surface. The phone is not here: it belongs to the story
+ * layer and stays put through the whole tour. Only the words change, and they
+ * always change in the same place, rising in from below and leaving upward.
  */
 function StepPanel({
   item,
@@ -91,14 +101,8 @@ function StepPanel({
     stagePresence(value, index, steps.length),
   );
   const y = useTransform(progress, (value) =>
-    stageOffset(value, index, steps.length, 32),
+    stageOffset(value, index, steps.length, 28),
   );
-  const rotateY = useTransform(
-    progress,
-    (value) =>
-      stageOffset(value, index, steps.length, 35) + [-12, 10, -8, 12][index],
-  );
-  const scale = useTransform(presence, [0, 1], [0.92, 1]);
   // An invisible layer still sits above its neighbours, so take it out of the
   // page entirely once it has fully handed over.
   const visibility = useTransform(presence, (value) =>
@@ -106,54 +110,31 @@ function StepPanel({
   );
 
   return (
-    <motion.div
-      style={{ opacity: presence, visibility }}
-      className="journey-stage absolute inset-0 grid grid-cols-[1.08fr_0.92fr] items-center gap-12 xl:gap-20"
+    <motion.article
+      style={{ opacity: presence, visibility, y }}
+      className="absolute inset-0 flex flex-col justify-center"
     >
-      <motion.article style={{ y }}>
-        <p className="label flex items-center gap-4 text-muted">
-          <span className="numeral text-base">0{index + 1}</span>
-          {item.label}
-        </p>
-        <h3 className="display mt-5 max-w-[11ch] text-[clamp(3.3rem,5.8vw,6rem)] text-ink">
-          {item.title}
-        </h3>
-        <p className="mt-7 max-w-[28rem] text-[1.08rem] leading-relaxed text-muted xl:text-[1.15rem]">
-          {item.body}
-        </p>
-        <p className="journey-feature">
-          <item.icon className="h-4 w-4" />
-          {
-            [
-              "Symptom and medication records",
-              "Medication schedules and reminders",
-              "Speech and movement sessions",
-              "Research, education, and support",
-            ][index]
-          }
-        </p>
-      </motion.article>
-      <div className="flex h-full min-h-0 items-center justify-center">
-        <motion.div
-          style={{ rotateY, rotateZ: [-5, 4, -4, 5][index], scale, y }}
-          className="journey-device w-[min(20rem,34svh)]"
-        >
-          <PhoneFrame>
-            <ThemedPhoneScreen
-              screen={item.screen}
-              alt={item.alt}
-              sizes="336px"
-            />
-          </PhoneFrame>
-        </motion.div>
-      </div>
-    </motion.div>
+      <p className="label flex items-center gap-4 text-muted">
+        <span className="numeral text-base">0{index + 1}</span>
+        {item.label}
+      </p>
+      <h3 className="display mt-5 max-w-[11ch] text-[clamp(2.75rem,3.9vw,4.4rem)] text-ink">
+        {item.title}
+      </h3>
+      <p className="mt-6 max-w-[26rem] text-[1.05rem] leading-relaxed text-muted xl:text-[1.1rem]">
+        {item.body}
+      </p>
+      <p className="journey-feature">
+        <item.icon className="h-4 w-4" />
+        {item.feature}
+      </p>
+    </motion.article>
   );
 }
 
 /**
  * A step button is also that step's progress: the track under the label fills
- * across exactly the stretch of scroll the step owns, so the row reads as four
+ * across exactly the stretch of scroll the step owns, so the rail reads as four
  * segments of one journey rather than four dots.
  */
 function StepButton({
@@ -181,7 +162,7 @@ function StepButton({
         aria-label={`Go to ${item.label}`}
         aria-current={active ? "step" : undefined}
         className={`group flex min-h-14 w-full flex-col justify-center gap-3 rounded-lg py-2 text-left transition-opacity duration-300 ${
-          active ? "opacity-100" : "opacity-60 hover:opacity-100"
+          active ? "opacity-100" : "opacity-55 hover:opacity-100"
         }`}
       >
         <span className="flex items-center gap-3 font-display text-xs font-bold xl:text-sm">
@@ -259,77 +240,63 @@ const trackStops = dayTrack(false).map(
 );
 
 /**
- * How far you scroll to move the day on by one step, and the run-out at the
- * end that lets the last step hold before the privacy chapter takes over.
+ * The feature tour.
  *
- * A step is deliberately longer than a screen. The sequence is four screens of
- * reading compressed into one pinned panel, and matching it one to one made
- * the whole chapter go by in a flick.
+ * `progress` is the tour's smoothed scroll progress, owned by `Story` because
+ * the phone above this panel reads the same value to change its screens. The
+ * pinned track is measured through `pinnedRef` for the same reason.
  */
-const STEP_SVH = 150;
-const RUN_OUT_SVH = 60;
-const TRACK_SVH = steps.length * STEP_SVH + RUN_OUT_SVH;
-
-/**
- * Where each step is settled, as a fraction of the panel's scroll travel.
- *
- * `stagePresence` gives step k the slice of progress from k/n to (k+1)/n, so
- * the middle of that slice is where its copy is fully opaque and nothing is
- * handing over. That is the position both the snap points and the step buttons
- * aim at, so clicking a step and scrolling to it come to rest in one place.
- */
-const JOURNEY_ENTER = 0.06;
-const JOURNEY_FINISH = 0.88;
-const settledAt = (index: number) =>
-  JOURNEY_ENTER +
-  ((index + 0.5) / steps.length) * (JOURNEY_FINISH - JOURNEY_ENTER);
-
-export function Journey() {
-  const ref = useRef<HTMLDivElement>(null);
+export function Journey({
+  pinnedRef,
+  progress,
+  arrivalRaw,
+  arrival,
+}: {
+  pinnedRef: RefObject<HTMLDivElement | null>;
+  progress: MotionValue<number>;
+  arrivalRaw: MotionValue<number>;
+  arrival: MotionValue<number>;
+}) {
   const [active, setActive] = useState(0);
   const dark = useSyncExternalStore(
     subscribeToTheme,
     readDarkTheme,
     () => false,
   );
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
-  // Follow a flick promptly while softening the small steps from a mouse wheel.
-  const smoothProgress = useSequenceProgress(
-    scrollYProgress,
-    JOURNEY_ENTER,
-    JOURNEY_FINISH,
+  const lightBackground = useTransform(progress, trackStops, dayTrack(false));
+  const darkBackground = useTransform(progress, trackStops, dayTrack(true));
+  // The panel slides up under the phone to reach its pin, and its colour
+  // matches the hero's foot, so the slide itself is invisible. The words
+  // would give it away, so they fade in late and climb at a fifth of the
+  // panel's speed: from the visitor's side, the tour appears in place.
+  const contentY = useTransform(arrivalRaw, (value) =>
+    value >= 1 ? "0svh" : `${-(1 - value) * 80}svh`,
   );
-  const lightBackground = useTransform(
-    smoothProgress,
-    trackStops,
-    dayTrack(false),
-  );
-  const darkBackground = useTransform(
-    smoothProgress,
-    trackStops,
-    dayTrack(true),
-  );
-  const orbitRotate = useTransform(smoothProgress, [0, 1], [-15, 100]);
+  // Opacity alone, unlike the step panels: the words are in the right place
+  // the whole time, and hiding them as well would leave anything that scrolls
+  // to the panel (a focused link, a test driving a step button) waiting for
+  // a fade that only the scroll can finish.
+  const contentFade = useTransform(arrival, [0.4, 1], [0, 1]);
 
-  useMotionValueEvent(smoothProgress, "change", (value) => {
+  useMotionValueEvent(progress, "change", (value) => {
     const next = stageIndex(value, steps.length);
     setActive((current) => (current === next ? current : next));
   });
 
-  const jumpTo = useCallback((index: number) => {
-    const section = ref.current;
-    if (!section) return;
-    const box = section.getBoundingClientRect();
-    const start = window.scrollY + box.top;
-    const distance = section.offsetHeight - window.innerHeight;
-    window.scrollTo({
-      top: start + distance * settledAt(index),
-      behavior: "smooth",
-    });
-  }, []);
+  const jumpTo = useCallback(
+    (index: number) => {
+      const section = pinnedRef.current;
+      if (!section) return;
+      const box = section.getBoundingClientRect();
+      const start = window.scrollY + box.top;
+      const distance = section.offsetHeight - window.innerHeight;
+      window.scrollTo({
+        top: start + distance * settledAt(index),
+        behavior: "smooth",
+      });
+    },
+    [pinnedRef],
+  );
 
   return (
     <section id="day" aria-label="Application features">
@@ -346,7 +313,7 @@ export function Journey() {
       </div>
 
       <div
-        ref={ref}
+        ref={pinnedRef}
         className="journey-pinned relative hidden motion-safe:lg:block"
         style={{ height: `${TRACK_SVH}svh` }}
       >
@@ -372,57 +339,61 @@ export function Journey() {
 
         <motion.div
           style={{ backgroundColor: dark ? darkBackground : lightBackground }}
-          className="sticky top-0 h-[100svh] overflow-hidden text-ink"
+          className="sticky top-0 h-[100svh] text-ink"
         >
-          <div
-            aria-hidden="true"
-            className="absolute -left-[2vw] bottom-[2%] font-display text-[27vw] font-medium leading-none text-ink/[0.035]"
+          {/* Clipped on its own: the panel stays open so the arriving copy can
+              sit above its top edge while it is still sliding into place. */}
+          <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+            <div className="absolute -left-[2vw] bottom-[2%] font-display text-[24vw] font-medium leading-none text-ink/[0.035]">
+              {String(active + 1).padStart(2, "0")}
+            </div>
+          </div>
+          <motion.div
+            style={{ y: contentY, opacity: contentFade }}
+            className="relative h-full"
           >
-            {String(active + 1).padStart(2, "0")}
-          </div>
-          <div className="journey-orbit" aria-hidden="true">
-            <motion.div style={{ rotate: orbitRotate }}>
-              <OrbitSculpture />
-            </motion.div>
-          </div>
-          <Container className="relative flex h-full flex-col pb-7 pt-28">
-            <div className="flex items-center justify-between gap-8">
-              <p className="label flex items-center gap-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-ink" />
-                Chapter 01&nbsp; / &nbsp;Application features
-              </p>
-              <a
-                href="#privacy"
-                className="text-link inline-flex min-h-11 items-center gap-2 text-xs font-bold text-muted"
-              >
-                Skip the tour <ArrowRight className="h-3 w-3 rotate-90" />
-              </a>
-            </div>
+            <Container className="relative flex h-full flex-col pb-8 pt-28">
+              <div className="flex items-center justify-between gap-8">
+                <p className="label flex items-center gap-3">
+                  <span className="h-2.5 w-2.5 rounded-full bg-ink" />
+                  Chapter 01&nbsp; / &nbsp;Application features
+                </p>
+                <a
+                  href="#privacy"
+                  className="text-link inline-flex min-h-11 items-center gap-2 text-xs font-bold text-muted"
+                >
+                  Skip the tour <ArrowRight className="h-3 w-3 rotate-90" />
+                </a>
+              </div>
 
-            <div className="relative min-h-0 flex-1">
-              {steps.map((item, index) => (
-                <StepPanel
-                  key={item.label}
-                  item={item}
-                  index={index}
-                  progress={smoothProgress}
-                />
-              ))}
-            </div>
-
-            <ol className="grid grid-cols-4 gap-4 pt-4 sm:gap-6">
-              {steps.map((item, index) => (
-                <StepButton
-                  key={item.label}
-                  item={item}
-                  index={index}
-                  active={active === index}
-                  progress={smoothProgress}
-                  onJump={jumpTo}
-                />
-              ))}
-            </ol>
-          </Container>
+              {/* The middle column is empty on purpose: the phone sits there. */}
+              <div className="journey-grid min-h-0 flex-1">
+                <div className="relative h-full min-h-0">
+                  {steps.map((item, index) => (
+                    <StepPanel
+                      key={item.label}
+                      item={item}
+                      index={index}
+                      progress={progress}
+                    />
+                  ))}
+                </div>
+                <div aria-hidden="true" />
+                <ol className="journey-rail">
+                  {steps.map((item, index) => (
+                    <StepButton
+                      key={item.label}
+                      item={item}
+                      index={index}
+                      active={active === index}
+                      progress={progress}
+                      onJump={jumpTo}
+                    />
+                  ))}
+                </ol>
+              </div>
+            </Container>
+          </motion.div>
         </motion.div>
       </div>
     </section>

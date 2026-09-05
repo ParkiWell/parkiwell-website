@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Mark } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { legalNotice, site } from "@/lib/site";
 
@@ -20,18 +19,10 @@ export function SiteFooter() {
       <Container className="pb-9 pt-12 sm:pb-10 sm:pt-16">
         <div className="footer-wordmark" aria-hidden="true">
           ParkiWell
+          <span className="text-brand">.</span>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
-          <Link
-            href="/"
-            prefetch={false}
-            className="inline-flex items-center gap-3"
-            aria-label={`${site.name} home`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full text-ink">
-              <Mark className="h-7 w-7" />
-            </span>
-          </Link>
+          <p className="label text-subtle">{site.tagline}</p>
 
           <nav aria-label="Footer">
             <ul className="flex flex-wrap items-center gap-x-7 gap-y-2 text-sm font-extrabold text-muted">
