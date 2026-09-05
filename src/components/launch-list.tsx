@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { ArrowRight, Check } from "@/components/icons";
 import { site } from "@/lib/site";
 
@@ -70,14 +76,19 @@ export function LaunchList({ className = "" }: { className?: string }) {
     try {
       const response = await fetch("/api/launch-list", {
         method: "POST",
-        headers: { "content-type": "application/json", accept: "application/json" },
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
         body: JSON.stringify({
           email: String(data.get("email") ?? ""),
           company: String(data.get("company") ?? ""),
           startedAt: openedAt.current,
         }),
       });
-      const body = await response.json().catch(() => ({ state: "unavailable" }));
+      const body = await response
+        .json()
+        .catch(() => ({ state: "unavailable" }));
       setState(body.state === "ok" ? "done" : (body.state as State));
       if (body.state === "ok") form.reset();
     } catch {
@@ -125,7 +136,7 @@ export function LaunchList({ className = "" }: { className?: string }) {
           placeholder="you@example.com"
           aria-describedby={failed ? `${fieldId}-note` : undefined}
           aria-invalid={state === "invalid" || undefined}
-          className="min-h-14 flex-1 rounded-full border border-ink/20 bg-surface px-6 text-[1.02rem] font-semibold text-ink placeholder:text-ink/40"
+          className="min-h-14 min-w-0 flex-1 rounded-full border border-ink/25 bg-surface px-6 text-base text-ink placeholder:text-muted"
         />
         {/* Not shown to anyone, and not announced. Only a script fills it in. */}
         <input
@@ -139,7 +150,7 @@ export function LaunchList({ className = "" }: { className?: string }) {
         <button
           type="submit"
           disabled={state === "sending"}
-          className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-ink px-7 font-extrabold text-bg shadow-raised transition-transform duration-300 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-70"
+          className="premium-button group shrink-0 disabled:opacity-70"
         >
           {state === "sending" ? "Adding you" : "Join the launch list"}
           <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />

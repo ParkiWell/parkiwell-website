@@ -10,20 +10,17 @@ const links = [
   { href: `mailto:${site.email}`, label: "Contact" },
 ];
 
-/**
- * One band, three things: who this is, where else to go, and the disclaimer
- * that has to be on every page. The links sit on the same line as the mark so
- * the footer reads as a single rule under the page rather than a stack of
- * little sections, and the notice runs as one sentence with the copyright
- * rather than a column of its own.
- */
+/** Brand sign-off, navigation, and the site-wide legal notice. */
 export function SiteFooter() {
   return (
     <footer
       data-chapter="footer"
       className="chapter border-t border-line text-ink"
     >
-      <Container className="py-9 sm:py-10">
+      <Container className="pb-9 pt-12 sm:pb-10 sm:pt-16">
+        <div className="footer-wordmark" aria-hidden="true">
+          ParkiWell
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
           <Link
             href="/"
@@ -31,11 +28,8 @@ export function SiteFooter() {
             className="inline-flex items-center gap-3"
             aria-label={`${site.name} home`}
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#12363a] shadow-card">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full text-ink">
               <Mark className="h-7 w-7" />
-            </span>
-            <span className="font-display text-lg font-extrabold tracking-[-0.03em]">
-              {site.name}
             </span>
           </Link>
 
@@ -44,7 +38,7 @@ export function SiteFooter() {
               {links.map((link) => (
                 <li key={link.href}>
                   <Link
-                    className="transition-colors duration-200 hover:text-ink"
+                    className="inline-flex min-h-11 items-center transition-colors duration-200 hover:text-ink"
                     href={link.href}
                   >
                     {link.label}

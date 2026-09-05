@@ -10,159 +10,157 @@ import {
 import { useRef } from "react";
 import { ArrowRight, Check, Offline } from "@/components/icons";
 import { Container } from "@/components/ui/container";
+import { OrbitSculpture } from "@/components/ui/orbit-sculpture";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
 import { screens } from "@/lib/screens";
 import { useStillness } from "@/hooks/use-stillness";
+import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/**
- * One entrance, one clock. Everything in the hero keys off these moments so
- * the page opens as a single choreographed reveal rather than a set of
- * elements each doing their own thing. The header bar drops in first (a CSS
- * animation in globals.css, on the same easing family), the headline rises
- * out of its masks, and everything else follows in reading order while the
- * phone comes into focus alongside the copy.
- */
-const at = {
-  badge: 0.25,
-  line1: 0.35,
-  line2: 0.5,
-  lede: 0.72,
-  actions: 0.86,
-  proof: 1.0,
-  phone: 0.55,
-} as const;
-
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
-  // Every animated value below stays wired up whether or not the visitor asked
-  // for stillness: it is the travel that flattens, not the markup. See
-  // `useStillness` for what breaks when the markup changes instead.
   const still = useStillness();
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
-  // Lazier than the pointer: the phone leans after your hand, not with it.
-  const tiltX = useSpring(pointerX, { stiffness: 55, damping: 16 });
-  const tiltY = useSpring(pointerY, { stiffness: 55, damping: 16 });
+  const tiltX = useSpring(pointerX, { stiffness: 90, damping: 24 });
+  const tiltY = useSpring(pointerY, { stiffness: 90, damping: 24 });
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end start"],
+    offset: ["start start", "end end"],
   });
-  const copyY = useTransform(scrollYProgress, [0, 1], still ? [0, 0] : [0, -70]);
-  const visualY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    still ? [0, 0] : [0, -140],
+  const progress = useSequenceProgress(scrollYProgress);
+  const copyY = useTransform(progress, [0, 0.65], [0, -90]);
+  const copyFade = useTransform(progress, [0, 0.5], [1, 0]);
+  const copyVisibility = useTransform(copyFade, (value) =>
+    value < 0.01 ? "hidden" : "visible",
   );
-  const fade = useTransform(
-    scrollYProgress,
-    [0, 0.78],
-    still ? [1, 1] : [1, 0.25],
+  const sceneX = useTransform(progress, [0, 0.8], [0, -40]);
+  const sceneShift = useTransform(sceneX, (value) => `${value}vw`);
+  const rotateY = useTransform(progress, [0, 0.75, 1], [-18, 8, 0]);
+  const rotateZ = useTransform(progress, [0, 0.8], [9, -4]);
+  const rotateX = useTransform(progress, [0, 1], [8, 0]);
+  const scale = useTransform(progress, [0, 0.8], [1, 0.88]);
+  const orbitRotation = useTransform(progress, [0, 1], [-22, 68]);
+  const orbitScale = useTransform(progress, [0, 1], [1, 0.76]);
+  const endFade = useTransform(progress, [0.45, 0.8], [0, 1]);
+  const endVisibility = useTransform(endFade, (value) =>
+    value < 0.01 ? "hidden" : "visible",
   );
 
+  const enter = (delay: number) => ({
+    duration: still ? 0 : 1.1,
+    delay: still ? 0 : delay,
+    ease,
+  });
+
   function moveVisual(event: React.PointerEvent<HTMLDivElement>) {
-    if (still) return;
+    if (still || event.pointerType !== "mouse" || progress.get() > 0.1) return;
     const bounds = event.currentTarget.getBoundingClientRect();
-    pointerX.set(((event.clientY - bounds.top) / bounds.height - 0.5) * -3);
-    pointerY.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 4);
+    pointerX.set(((event.clientY - bounds.top) / bounds.height - 0.5) * -8);
+    pointerY.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 10);
   }
 
   return (
     <section
       ref={ref}
       data-chapter="hero"
-      data-settle="1"
-      className="chapter relative flex min-h-[100svh] overflow-hidden pt-28 sm:pt-32"
+      className="chapter hero-chapter relative"
     >
-      <Container className="relative flex flex-1 items-center pb-14 sm:pb-20">
-        <div className="grid w-full items-center gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:gap-6 xl:gap-12">
+      <div
+        data-settle="1"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[100svh]"
+        aria-hidden="true"
+      />
+      <div
+        data-settle="1"
+        className="hero-end-settle pointer-events-none absolute inset-x-0 top-[54%] hidden h-[100svh] motion-safe:lg:block"
+        aria-hidden="true"
+      />
+      <div className="hero-viewport">
+        <Container className="hero-layout relative">
           <motion.div
-            style={{ y: copyY, opacity: fade }}
-            className="relative z-10"
+            style={{ y: copyY, opacity: copyFade, visibility: copyVisibility }}
+            className="hero-copy relative z-10"
           >
             <motion.p
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 1, delay: still ? 0 : at.badge, ease }}
-              className="mb-7 inline-flex items-center gap-2 rounded-full border border-ink/15 bg-surface px-4 py-2 text-sm font-extrabold text-ink shadow-card"
+              transition={enter(0.1)}
+              className="label mb-8 flex items-center gap-3 text-muted"
             >
-              <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
-              Made for life with Parkinson&rsquo;s
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-current"
+                aria-hidden="true"
+              />
+              Parkinson&rsquo;s care management
             </motion.p>
-
-            <h1 className="display max-w-[9ch] text-[clamp(3.8rem,10vw,8.3rem)] text-ink">
-              <span className="block overflow-hidden pb-[0.08em]">
+            <h1 className="hero-title display">
+              <span className="block overflow-hidden pb-[0.12em]">
                 <motion.span
-                  className="block origin-bottom-left"
-                  initial={{ y: "112%", rotate: 2.5 }}
-                  animate={{ y: 0, rotate: 0 }}
-                  transition={{ duration: still ? 0 : 1.45, delay: still ? 0 : at.line1, ease }}
+                  className="block"
+                  initial={{ y: "110%" }}
+                  animate={{ y: 0 }}
+                  transition={enter(0.18)}
                 >
-                  Your day,
+                  Daily care,
                 </motion.span>
               </span>
-              <span className="block overflow-hidden pb-[0.08em] text-brand">
+              <span className="block overflow-hidden pb-[0.14em]">
                 <motion.span
-                  className="block origin-bottom-left"
-                  initial={{ y: "112%", rotate: 2.5 }}
-                  animate={{ y: 0, rotate: 0 }}
-                  transition={{ duration: still ? 0 : 1.45, delay: still ? 0 : at.line2, ease }}
+                  className="block"
+                  initial={{ y: "110%" }}
+                  animate={{ y: 0 }}
+                  transition={enter(0.3)}
                 >
-                  in rhythm.
+                  organized.
                 </motion.span>
               </span>
             </h1>
-
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.lede, ease }}
-              className="mt-7 max-w-[38rem] text-[1.1rem] font-medium leading-relaxed text-muted sm:text-[1.25rem]"
+              transition={enter(0.45)}
+              className="hero-description mt-7 max-w-[30rem] text-lg leading-relaxed text-muted"
             >
-              ParkiWell brings symptom notes, medication schedules, and guided
-              practice together in one place, and it all works offline.
+              ParkiWell combines symptom records, medication schedules, and
+              guided speech and movement practice in one application.
             </motion.p>
-
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.actions, ease }}
-              className="mt-9 flex flex-col gap-3 sm:flex-row"
+              transition={enter(0.55)}
+              className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4"
             >
-              <a
-                href="#get"
-                className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-ink px-7 font-extrabold text-bg transition-transform duration-200 hover:-translate-y-1"
-              >
-                Get notified at launch
-                <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+              <a href="#get" className="premium-button group">
+                Get notified at launch{" "}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
               <a
                 href="#day"
-                className="inline-flex min-h-14 items-center justify-center rounded-full border border-ink/20 bg-surface px-7 font-extrabold text-ink transition-colors duration-300 hover:bg-brand-soft"
+                className="text-link inline-flex min-h-12 items-center gap-2 text-sm font-bold"
               >
-                See how it works
+                Explore the app <ArrowRight className="h-4 w-4 rotate-45" />
               </a>
             </motion.div>
-
             <motion.ul
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: still ? 0 : 0.9, delay: still ? 0 : at.proof }}
-              className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-[0.92rem] font-bold text-muted"
+              transition={enter(0.7)}
+              className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-muted"
             >
               <li className="flex items-center gap-2">
-                <Offline className="h-5 w-5 text-accent" /> Works offline
+                <Offline className="h-4 w-4" /> Works offline
               </li>
               <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-accent" /> No ads or tracking
+                <Check className="h-4 w-4" /> No ads or tracking
               </li>
             </motion.ul>
           </motion.div>
 
           <motion.div
-            style={{ y: visualY }}
-            className="relative mx-auto h-[34rem] w-full max-w-[39rem] sm:h-[42rem] lg:h-[min(73vh,44rem)]"
+            style={{ x: sceneShift }}
+            className="hero-scene"
             onPointerMove={moveVisual}
             onPointerLeave={() => {
               pointerX.set(0);
@@ -170,28 +168,73 @@ export function Hero() {
             }}
           >
             <motion.div
-              style={{
-                rotateX: tiltX,
-                rotateY: tiltY,
-                transformPerspective: 900,
-              }}
-              initial={{ opacity: 0, y: 56, scale: 0.95, filter: "blur(14px)" }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-              transition={{ duration: still ? 0 : 1.7, delay: still ? 0 : at.phone, ease }}
-              className="absolute left-1/2 top-[2%] z-10 w-[17rem] -translate-x-1/2 sm:w-[19rem] lg:w-[min(21rem,34vh)]"
+              className="hero-orbit"
+              style={{ rotate: orbitRotation, scale: orbitScale }}
             >
-              <PhoneFrame>
-                <ThemedPhoneScreen
-                  screen={screens.welcome}
-                  alt="The ParkiWell welcome screen introducing daily care and guided recovery."
-                  priority
-                  sizes="(max-width: 639px) 272px, 336px"
-                />
-              </PhoneFrame>
+              <OrbitSculpture />
+            </motion.div>
+            <motion.div
+              className="hero-device-entrance"
+              initial={{ opacity: 0, y: 45 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={enter(0.35)}
+            >
+              <motion.div
+                className="hero-device-tilt"
+                style={{ rotateX: tiltX, rotateY: tiltY }}
+              >
+                <motion.div
+                  className="hero-device"
+                  style={{ rotateY, rotateZ, rotateX, scale }}
+                  data-hero-device
+                >
+                  <PhoneFrame>
+                    <ThemedPhoneScreen
+                      screen={screens.welcome}
+                      alt="The ParkiWell welcome screen introducing daily care and guided recovery."
+                      priority
+                      sizes="(max-width: 639px) 240px, 340px"
+                    />
+                  </PhoneFrame>
+                </motion.div>
+              </motion.div>
             </motion.div>
           </motion.div>
-        </div>
-      </Container>
+
+          <motion.div
+            style={{ opacity: endFade, visibility: endVisibility }}
+            className="hero-end-copy"
+          >
+            <p className="label text-muted">Application overview</p>
+            <p className="display mt-6 text-[clamp(3rem,5.2vw,5.8rem)]">
+              Daily care.
+              <br />
+              One application.
+            </p>
+            <p className="mt-6 max-w-[23rem] text-lg text-muted">
+              Review symptom records, manage medication schedules, and access
+              guided practice and support resources.
+            </p>
+            <a
+              href="#day"
+              className="text-link mt-7 inline-flex min-h-12 items-center gap-3 text-sm font-bold"
+            >
+              View the features <ArrowRight className="h-4 w-4 rotate-90" />
+            </a>
+          </motion.div>
+        </Container>
+        <Container className="hero-bottom">
+          <span className="label flex items-center gap-3">
+            <span className="scroll-cue" aria-hidden="true">
+              <ArrowRight className="h-3 w-3 rotate-90" />
+            </span>{" "}
+            Scroll to explore the features
+          </span>
+          <span className="label hidden sm:block">
+            ParkiWell / Daily care management
+          </span>
+        </Container>
+      </div>
     </section>
   );
 }

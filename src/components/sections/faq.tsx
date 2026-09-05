@@ -16,7 +16,7 @@ const questions = [
   {
     question: "What does the movement coach do?",
     answer:
-      "The movement coach, still in development, guides seated and standing exercise sessions through your phone's camera. As you move, it suggests small adjustments, like making the next repetition a little larger or keeping a steadier pace, and when you finish it summarizes how the session went. Tracking runs on your device, and the camera feed is never recorded or uploaded.",
+      "The movement coach, still in development, guides seated and standing exercise sessions through your phone's camera. It provides observations on movement range, pace, and smoothness, followed by a session summary. Tracking runs on your device, and the camera feed is never recorded or uploaded.",
   },
   {
     question: "Is ParkiWell a medical device?",
@@ -49,29 +49,28 @@ export function Faq() {
       id="questions"
       data-chapter="questions"
       data-settle="1"
-      className="chapter flex min-h-[100svh] items-center py-28 text-ink"
+      className="chapter py-28 text-ink sm:py-36"
     >
       <Container>
-        <div className="grid gap-14 lg:grid-cols-[0.75fr_1.25fr] lg:gap-24 xl:gap-32">
-          <div className="lg:sticky lg:top-32 lg:self-start">
-            <p className="label">Chapter 03&nbsp; / &nbsp;Good to know</p>
-            <h2 className="display mt-7 max-w-[7ch] text-[clamp(4rem,8vw,7.5rem)]">
-              Ask away.
+        <div className="faq-layout">
+          <div className="faq-intro">
+            <h2 className="display max-w-[12ch] text-[clamp(3.5rem,6.5vw,6.7rem)]">
+              Frequently asked questions.
             </h2>
-            <p className="mt-7 max-w-[29rem] text-[1.1rem] font-semibold leading-relaxed text-muted">
-              Straight answers to the questions we hear most. If yours is not
-              here, send it over: a person reads every support message.
+            <p className="mt-7 max-w-[26rem] text-base leading-relaxed text-muted">
+              Information about app features, privacy, and account management.
+              Contact support for additional assistance.
             </p>
             <Link
               href="/support"
-              className="group mt-8 inline-flex items-center gap-3 font-extrabold text-brand-strong"
+              className="text-link group mt-5 inline-flex min-h-12 items-center gap-3 text-sm font-bold text-ink"
             >
               Visit support
               <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
 
-          <div className="border-t border-ink/15">
+          <div className="faq-questions border-t border-ink/20">
             {questions.map((item, index) => {
               const isOpen = open === index;
               const panelId = `${baseId}-panel-${index}`;
@@ -88,15 +87,15 @@ export function Faq() {
                     className="group flex w-full items-center justify-between gap-6 py-6 text-left sm:py-7"
                   >
                     <span className="flex items-start gap-4 sm:gap-6">
-                      <span className="numeral mt-1 text-sm text-brand-strong">
+                      <span className="numeral mt-1 text-sm text-ink">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <span className="font-display text-[1.2rem] font-extrabold leading-tight tracking-[-0.03em] sm:text-[1.45rem]">
+                      <span className="font-display text-[1.15rem] font-medium leading-snug tracking-[-0.025em] sm:text-[1.3rem]">
                         {item.question}
                       </span>
                     </span>
                     <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink/20 transition-colors duration-200 ${
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/20 transition-colors duration-200 ${
                         isOpen ? "bg-ink text-bg" : "group-hover:bg-surface-2"
                       }`}
                     >
@@ -123,7 +122,7 @@ export function Faq() {
                         }}
                         className="overflow-hidden"
                       >
-                        <p className="max-w-[43rem] pb-7 pl-10 pr-4 text-[1rem] font-semibold leading-relaxed text-muted sm:pl-[4.6rem] sm:text-[1.08rem]">
+                        <p className="max-w-[43rem] pb-7 pl-10 pr-4 text-[1rem] font-normal leading-relaxed text-muted sm:pl-[4.6rem] sm:text-[1.08rem]">
                           {item.answer}
                         </p>
                       </motion.div>

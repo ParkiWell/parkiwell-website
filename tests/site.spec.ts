@@ -57,7 +57,7 @@ test("the day journey advances as the page scrolls", async ({ page }) => {
   await journey.scrollIntoViewIfNeeded();
 
   const firstStage = page.locator("h3:visible", {
-    hasText: "Notice how today feels",
+    hasText: "Review your symptoms",
   });
   await expect(firstStage).toBeVisible();
 
@@ -71,7 +71,7 @@ test("the day journey advances as the page scrolls", async ({ page }) => {
   await page.waitForTimeout(600);
 
   await expect(
-    page.locator("h3:visible", { hasText: "Keep support within reach" }),
+    page.locator("h3:visible", { hasText: "Access support resources" }),
   ).toBeVisible();
 });
 
@@ -140,14 +140,12 @@ test("reduced motion renders the full story without pinning", async ({
   const page = await context.newPage();
   await page.goto("/", { waitUntil: "networkidle" });
 
+  await expect(page.getByText("Review your symptoms").first()).toBeVisible();
   await expect(
-    page.getByText("Notice how today feels").first(),
+    page.getByText("Access support resources").first(),
   ).toBeVisible();
   await expect(
-    page.getByText("Keep support within reach").first(),
-  ).toBeVisible();
-  await expect(
-    page.getByText("A coach that helps you improve.").first(),
+    page.getByText("Guided movement practice.").first(),
   ).toBeVisible();
 
   await context.close();
@@ -266,7 +264,6 @@ test.describe("the launch list", () => {
     await expect(
       form.getByRole("button", { name: /Join the launch list/ }),
     ).toBeVisible();
-
   });
 
   // Filled in only by something that cannot see the page.
@@ -287,7 +284,10 @@ test.describe("the launch list", () => {
     await page.goto("/#get", { waitUntil: "networkidle" });
     // Past the window that turns away a script driving the form instantly.
     await page.waitForTimeout(600);
-    await page.locator("#get form").getByRole("textbox").fill("reader@example.com");
+    await page
+      .locator("#get form")
+      .getByRole("textbox")
+      .fill("reader@example.com");
     await page.locator("#get form").getByRole("button").click();
 
     await expect(page.locator("#get").getByRole("alert")).toContainText(
@@ -379,9 +379,9 @@ test.describe("scroll gravity", () => {
     } else {
       expect(await snap({})).toBe("none");
     }
-    expect(await snap({ ...testInfo.project.use, reducedMotion: "reduce" })).toBe(
-      "none",
-    );
+    expect(
+      await snap({ ...testInfo.project.use, reducedMotion: "reduce" }),
+    ).toBe("none");
   });
 
   test("a long scroll is never held back", async ({ page }, testInfo) => {
@@ -428,9 +428,7 @@ test.describe("scroll gravity", () => {
     await page.waitForTimeout(600);
 
     const privacy = await page.evaluate(() => {
-      const box = document
-        .querySelector("#privacy")!
-        .getBoundingClientRect();
+      const box = document.querySelector("#privacy")!.getBoundingClientRect();
       return Math.round(
         box.top + window.scrollY + box.height / 2 - window.innerHeight / 2,
       );
@@ -469,7 +467,9 @@ test.describe("scroll gravity", () => {
     await page.goto("/", { waitUntil: "networkidle" });
     await page.waitForTimeout(600);
 
-    await page.evaluate(() => window.scrollTo({ top: 1200, behavior: "instant" }));
+    await page.evaluate(() =>
+      window.scrollTo({ top: 1200, behavior: "instant" }),
+    );
     await page.waitForTimeout(300); // past the rest window: the settle is under way
     await page.mouse.wheel(0, 600);
     // The wheel lands, over however many frames the browser takes to apply it.
@@ -500,7 +500,9 @@ test.describe("scroll gravity", () => {
     expect(rulers).toHaveLength(4);
 
     for (const [index, ruler] of rulers.entries()) {
-      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
       await page.waitForTimeout(400);
       await page.locator("#day button").nth(index).click();
       await page.waitForTimeout(2400);

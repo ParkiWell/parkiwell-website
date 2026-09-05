@@ -37,10 +37,10 @@ const ARRIVED = 2;
  * headed somewhere, not a claim on every pixel of the page, and the furthest
  * it can carry you unprompted stays under half a screen.
  */
-const REACH = 0.45;
+const REACH = 0.28;
 
 /** Quiet time after the last input before the page is allowed to settle. */
-const REST_MS = 150;
+const REST_MS = 240;
 
 /** Spring for the settle. Heavy, slow, and just underdamped enough to give. */
 const STIFFNESS = 70;
@@ -54,7 +54,9 @@ function readTargets(): Target[] {
   const furthest = document.documentElement.scrollHeight - viewport;
   const seen = new Map<number, Target>();
 
-  for (const element of document.querySelectorAll<HTMLElement>("[data-settle]")) {
+  for (const element of document.querySelectorAll<HTMLElement>(
+    "[data-settle]",
+  )) {
     const box = element.getBoundingClientRect();
     if (box.height === 0) continue; // hidden at this breakpoint
 
@@ -68,7 +70,8 @@ function readTargets(): Target[] {
     );
     const weight = Number(element.dataset.settle) || 1;
     const existing = seen.get(centre);
-    if (!existing || weight > existing.weight) seen.set(centre, { centre, weight });
+    if (!existing || weight > existing.weight)
+      seen.set(centre, { centre, weight });
   }
 
   // The bottom of the page is a place to stop, whether or not a chapter
@@ -107,7 +110,8 @@ export function useMagneticScroll() {
     if (still) return;
     if (!window.matchMedia("(pointer: fine)").matches) return; // touch has its own physics
 
-    let targets = readTargets();
+    const heldPointers = new Set<number>();
+    const heldKeys = new Set<string>();
     let frame = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let settling = false;
@@ -115,6 +119,7 @@ export function useMagneticScroll() {
     let position = 0;
     let goal = 0;
     let last = 0;
+    let writtenAt = 0;
 
     const stop = () => {
       settling = false;
@@ -125,6 +130,12 @@ export function useMagneticScroll() {
     const step = (now: number) => {
       frame = 0;
       if (!settling) return;
+      // Anchor navigation and history restoration can move the page without
+      // a wheel event. Never pull them back to an earlier spring destination.
+      if (Math.abs(window.scrollY - writtenAt) > ARRIVED) {
+        stop();
+        return;
+      }
 
       // Fixed sub-steps: a spring integrated on a variable frame time behaves
       // differently on a 60Hz and a 120Hz screen, and this one is tuned by feel.
@@ -145,15 +156,30 @@ export function useMagneticScroll() {
       }
 
       window.scrollTo({ top: position, behavior: "instant" });
+      writtenAt = window.scrollY;
       frame = requestAnimationFrame(step);
     };
 
     const settle = () => {
+      // Reading, editing, selecting and an open menu all outrank the pull.
+      if (
+        heldPointers.size ||
+        heldKeys.size ||
+        document.documentElement.dataset.scrollLocked === "true" ||
+        document.activeElement?.closest(
+          "input, textarea, select, [contenteditable='true']",
+        ) ||
+        window.getSelection()?.isCollapsed === false
+      )
+        return;
       const at = window.scrollY;
-      const target = nearest(targets, at, window.innerHeight);
+      // Read at rest, not at mount. FAQ panels, navigation and font loading can
+      // move every later target. This never measures layout during a frame.
+      const target = nearest(readTargets(), at, window.innerHeight);
       if (!target || Math.abs(target.centre - at) < ARRIVED) return;
 
       position = at;
+      writtenAt = at;
       goal = target.centre;
       velocity = 0;
       settling = true;
@@ -162,7 +188,7 @@ export function useMagneticScroll() {
     };
 
     const onScroll = () => {
-      if (settling) return; // our own scrolling, not theirs
+      if (settling || heldPointers.size || heldKeys.size) return;
       clearTimeout(timer);
       timer = setTimeout(settle, REST_MS);
     };
@@ -173,30 +199,51 @@ export function useMagneticScroll() {
       stop();
     };
 
-    const remeasure = () => {
+    const pointerDown = (event: PointerEvent) => {
+      heldPointers.add(event.pointerId);
       interrupt();
-      targets = readTargets();
+    };
+    const pointerUp = (event: PointerEvent) =>
+      heldPointers.delete(event.pointerId);
+    const keyDown = (event: KeyboardEvent) => {
+      heldKeys.add(event.code);
+      interrupt();
+    };
+    const keyUp = (event: KeyboardEvent) => heldKeys.delete(event.code);
+    const resetInput = () => {
+      heldPointers.clear();
+      heldKeys.clear();
+      interrupt();
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+    for (const event of ["wheel", "touchstart", "touchmove", "focusin"]) {
       window.addEventListener(event, interrupt, { passive: true });
     }
-    window.addEventListener("resize", remeasure, { passive: true });
-
-    // Chapter heights are in svh and images settle late, so measure again once
-    // the page has stopped moving under its own weight.
-    const settleIn = setTimeout(remeasure, 800);
+    window.addEventListener("pointerdown", pointerDown, { passive: true });
+    window.addEventListener("pointerup", pointerUp, { passive: true });
+    window.addEventListener("pointercancel", pointerUp, { passive: true });
+    window.addEventListener("keydown", keyDown, { passive: true });
+    window.addEventListener("keyup", keyUp, { passive: true });
+    window.addEventListener("blur", resetInput);
+    window.addEventListener("resize", interrupt, { passive: true });
+    document.addEventListener("visibilitychange", resetInput);
 
     return () => {
       clearTimeout(timer);
-      clearTimeout(settleIn);
       stop();
       window.removeEventListener("scroll", onScroll);
-      for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+      for (const event of ["wheel", "touchstart", "touchmove", "focusin"]) {
         window.removeEventListener(event, interrupt);
       }
-      window.removeEventListener("resize", remeasure);
+      window.removeEventListener("pointerdown", pointerDown);
+      window.removeEventListener("pointerup", pointerUp);
+      window.removeEventListener("pointercancel", pointerUp);
+      window.removeEventListener("keydown", keyDown);
+      window.removeEventListener("keyup", keyUp);
+      window.removeEventListener("blur", resetInput);
+      window.removeEventListener("resize", interrupt);
+      document.removeEventListener("visibilitychange", resetInput);
     };
   }, [still]);
 }

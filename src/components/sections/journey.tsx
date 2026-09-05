@@ -4,18 +4,19 @@ import {
   motion,
   useMotionValueEvent,
   useScroll,
-  useSpring,
   useTransform,
   type MotionValue,
 } from "motion/react";
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
-import { Heart, Person, Pill, Play } from "@/components/icons";
+import { ArrowRight, Heart, Person, Pill, Play } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
+import { OrbitSculpture } from "@/components/ui/orbit-sculpture";
 import { Reveal } from "@/components/ui/reveal";
 import { stageIndex, stageOffset, stagePresence } from "@/lib/stages";
 import { screens } from "@/lib/screens";
 import { dayTrack } from "@/lib/tones";
+import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
 type Step = {
   label: string;
@@ -28,32 +29,32 @@ type Step = {
 
 const steps: Step[] = [
   {
-    label: "A quick check-in",
-    title: "Notice how today feels",
-    body: "See your symptoms and medications side by side, and add a note whenever something feels worth remembering.",
+    label: "Symptom records",
+    title: "Review your symptoms",
+    body: "View symptom and medication activity together, and record notes about changes you observe.",
     screen: screens.home,
     alt: "The Home screen showing symptom activity, medication activity, and a personal pattern summary.",
     icon: Heart,
   },
   {
-    label: "Medication time",
-    title: "Stay on top of doses",
-    body: "Your schedule sits alongside everything due today, with reminders you can turn on whenever you want them.",
+    label: "Medications",
+    title: "Manage your medications",
+    body: "Review your medication schedule and doses due today. Enable reminders as needed.",
     screen: screens.manage,
     alt: "The Manage screen showing medications due today and medication tools.",
     icon: Pill,
   },
   {
-    label: "A practice moment",
-    title: "Practice at your pace",
-    body: "Set a weekly goal for speech and movement practice. ParkiWell lines up your next session and keeps track of what you have completed.",
+    label: "Guided practice",
+    title: "Plan your practice",
+    body: "Set weekly goals for speech and movement practice, view your next session, and review completed sessions.",
     screen: screens.recovery,
     alt: "The Recovery screen showing a weekly practice goal and a chair workout ready to begin.",
     icon: Play,
   },
   {
-    label: "Helpful resources",
-    title: "Keep support within reach",
+    label: "Support resources",
+    title: "Access support resources",
     body: "The Community area collects research, educational videos, specialist directories, events, helplines, and daily living guides in one place.",
     screen: screens.community,
     alt: "The Community screen showing research, videos, specialist links, events, helplines, and daily living guides.",
@@ -74,10 +75,8 @@ const readDarkTheme = () =>
   document.documentElement.getAttribute("data-theme") === "dark";
 
 /**
- * One whole step of the pinned sequence: copy and phone move as a single
- * surface. A step slides in from the right and leaves to the left, so the
- * scroll reads as paging through the day rather than swapping paragraphs
- * inside a fixed frame.
+ * Copy and hardware share a handoff, with less travel for the reading surface
+ * and a perspective turn for the device. Neither overlaps the next stage.
  */
 function StepPanel({
   item,
@@ -91,9 +90,15 @@ function StepPanel({
   const presence = useTransform(progress, (value) =>
     stagePresence(value, index, steps.length),
   );
-  const x = useTransform(progress, (value) =>
-    stageOffset(value, index, steps.length, 160),
+  const y = useTransform(progress, (value) =>
+    stageOffset(value, index, steps.length, 32),
   );
+  const rotateY = useTransform(
+    progress,
+    (value) =>
+      stageOffset(value, index, steps.length, 35) + [-12, 10, -8, 12][index],
+  );
+  const scale = useTransform(presence, [0, 1], [0.92, 1]);
   // An invisible layer still sits above its neighbours, so take it out of the
   // page entirely once it has fully handed over.
   const visibility = useTransform(presence, (value) =>
@@ -102,24 +107,45 @@ function StepPanel({
 
   return (
     <motion.div
-      style={{ opacity: presence, x, visibility }}
-      className="absolute inset-0 grid grid-cols-[1.08fr_0.92fr] items-center gap-12 xl:gap-20"
+      style={{ opacity: presence, visibility }}
+      className="journey-stage absolute inset-0 grid grid-cols-[1.08fr_0.92fr] items-center gap-12 xl:gap-20"
     >
-      <article>
-        <p className="label text-ink/70">{item.label}</p>
-        <h3 className="display mt-4 max-w-[9ch] text-[clamp(3.3rem,6.3vw,6.2rem)] text-ink">
+      <motion.article style={{ y }}>
+        <p className="label flex items-center gap-4 text-muted">
+          <span className="numeral text-base">0{index + 1}</span>
+          {item.label}
+        </p>
+        <h3 className="display mt-5 max-w-[11ch] text-[clamp(3.3rem,5.8vw,6rem)] text-ink">
           {item.title}
         </h3>
-        <p className="mt-7 max-w-[35rem] text-[1.08rem] font-semibold leading-relaxed text-ink/75 xl:text-[1.22rem]">
+        <p className="mt-7 max-w-[28rem] text-[1.08rem] leading-relaxed text-muted xl:text-[1.15rem]">
           {item.body}
         </p>
-      </article>
+        <p className="journey-feature">
+          <item.icon className="h-4 w-4" />
+          {
+            [
+              "Symptom and medication records",
+              "Medication schedules and reminders",
+              "Speech and movement sessions",
+              "Research, education, and support",
+            ][index]
+          }
+        </p>
+      </motion.article>
       <div className="flex h-full min-h-0 items-center justify-center">
-        <div className="w-[min(20rem,39vh)]">
+        <motion.div
+          style={{ rotateY, rotateZ: [-5, 4, -4, 5][index], scale, y }}
+          className="journey-device w-[min(20rem,34svh)]"
+        >
           <PhoneFrame>
-            <ThemedPhoneScreen screen={item.screen} alt={item.alt} sizes="336px" />
+            <ThemedPhoneScreen
+              screen={item.screen}
+              alt={item.alt}
+              sizes="336px"
+            />
           </PhoneFrame>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -154,11 +180,12 @@ function StepButton({
         onClick={() => onJump(index)}
         aria-label={`Go to ${item.label}`}
         aria-current={active ? "step" : undefined}
-        className={`group flex w-full flex-col gap-3 rounded-lg py-1 text-left transition-opacity duration-300 ${
-          active ? "opacity-100" : "opacity-50 hover:opacity-85"
+        className={`group flex min-h-14 w-full flex-col justify-center gap-3 rounded-lg py-2 text-left transition-opacity duration-300 ${
+          active ? "opacity-100" : "opacity-60 hover:opacity-100"
         }`}
       >
-        <span className="hidden font-display text-sm font-extrabold xl:block">
+        <span className="flex items-center gap-3 font-display text-xs font-bold xl:text-sm">
+          <span className="numeral opacity-60">0{index + 1}</span>
           {item.label}
         </span>
         <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-ink/15">
@@ -239,8 +266,8 @@ const trackStops = dayTrack(false).map(
  * reading compressed into one pinned panel, and matching it one to one made
  * the whole chapter go by in a flick.
  */
-const STEP_SVH = 125;
-const RUN_OUT_SVH = 30;
+const STEP_SVH = 150;
+const RUN_OUT_SVH = 60;
 const TRACK_SVH = steps.length * STEP_SVH + RUN_OUT_SVH;
 
 /**
@@ -251,7 +278,11 @@ const TRACK_SVH = steps.length * STEP_SVH + RUN_OUT_SVH;
  * handing over. That is the position both the snap points and the step buttons
  * aim at, so clicking a step and scrolling to it come to rest in one place.
  */
-const settledAt = (index: number) => (index + 0.5) / steps.length;
+const JOURNEY_ENTER = 0.06;
+const JOURNEY_FINISH = 0.88;
+const settledAt = (index: number) =>
+  JOURNEY_ENTER +
+  ((index + 0.5) / steps.length) * (JOURNEY_FINISH - JOURNEY_ENTER);
 
 export function Journey() {
   const ref = useRef<HTMLDivElement>(null);
@@ -265,13 +296,12 @@ export function Journey() {
     target: ref,
     offset: ["start start", "end end"],
   });
-  // Heavy and overdamped. The panel follows the scroll the way something with
-  // mass does: it takes a moment to get going and it does not overshoot.
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 44,
-    damping: 24,
-    mass: 1,
-  });
+  // Follow a flick promptly while softening the small steps from a mouse wheel.
+  const smoothProgress = useSequenceProgress(
+    scrollYProgress,
+    JOURNEY_ENTER,
+    JOURNEY_FINISH,
+  );
   const lightBackground = useTransform(
     smoothProgress,
     trackStops,
@@ -282,6 +312,7 @@ export function Journey() {
     trackStops,
     dayTrack(true),
   );
+  const orbitRotate = useTransform(smoothProgress, [0, 1], [-15, 100]);
 
   useMotionValueEvent(smoothProgress, "change", (value) => {
     const next = stageIndex(value, steps.length);
@@ -301,14 +332,14 @@ export function Journey() {
   }, []);
 
   return (
-    <section id="day" aria-label="Your day in rhythm">
+    <section id="day" aria-label="Application features">
       {/*
         Which of the two layouts shows is decided in CSS, not here. Deciding it
         in JavaScript would mean the server and the client disagree about the
         markup whenever reduced motion is on, and React answers a disagreement
         by rebuilding the page from scratch, taking the theme with it.
       */}
-      <div className="motion-safe:lg:hidden">
+      <div className="journey-stacked motion-safe:lg:hidden">
         {steps.map((item, index) => (
           <StackedStep key={item.label} item={item} index={index} />
         ))}
@@ -316,7 +347,7 @@ export function Journey() {
 
       <div
         ref={ref}
-        className="relative hidden motion-safe:lg:block"
+        className="journey-pinned relative hidden motion-safe:lg:block"
         style={{ height: `${TRACK_SVH}svh` }}
       >
         {/*
@@ -345,19 +376,27 @@ export function Journey() {
         >
           <div
             aria-hidden="true"
-            className="absolute -left-[7vw] top-[17%] font-display text-[30vw] font-extrabold leading-none text-ink/[0.055]"
+            className="absolute -left-[2vw] bottom-[2%] font-display text-[27vw] font-medium leading-none text-ink/[0.035]"
           >
             {String(active + 1).padStart(2, "0")}
+          </div>
+          <div className="journey-orbit" aria-hidden="true">
+            <motion.div style={{ rotate: orbitRotate }}>
+              <OrbitSculpture />
+            </motion.div>
           </div>
           <Container className="relative flex h-full flex-col pb-7 pt-28">
             <div className="flex items-center justify-between gap-8">
               <p className="label flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-ink" />
-                Chapter 01&nbsp; / &nbsp;Your day, in rhythm
+                Chapter 01&nbsp; / &nbsp;Application features
               </p>
-              <p className="font-display text-sm font-extrabold">
-                Scroll to move through the day
-              </p>
+              <a
+                href="#privacy"
+                className="text-link inline-flex min-h-11 items-center gap-2 text-xs font-bold text-muted"
+              >
+                Skip the tour <ArrowRight className="h-3 w-3 rotate-90" />
+              </a>
             </div>
 
             <div className="relative min-h-0 flex-1">

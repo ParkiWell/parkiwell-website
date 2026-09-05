@@ -16,9 +16,7 @@ export function PhoneFrame({
   className?: string;
 }) {
   return (
-    <div
-      className={`relative rounded-[2.6rem] border-2 border-[#607477]/45 bg-[#20363a] p-[0.5rem] shadow-device ${className}`}
-    >
+    <div className={`phone-frame relative ${className}`}>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-[2.6rem] ring-1 ring-inset ring-white/20"

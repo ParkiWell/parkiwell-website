@@ -1,8 +1,8 @@
 export const site = {
   name: "ParkiWell",
-  tagline: "Your care day, in rhythm",
+  tagline: "Daily Parkinson's care management",
   description:
-    "ParkiWell brings daily care into one clear rhythm, with offline records, medication routines, and guided practice in one place.",
+    "ParkiWell combines symptom records, medication schedules, and guided speech and movement practice, with offline access and optional synchronization.",
   url: "https://parkiwell.com",
   email: "jcscen@gmail.com",
   locale: "en_US",

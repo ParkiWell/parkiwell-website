@@ -13,22 +13,22 @@ import { Reveal } from "@/components/ui/reveal";
 const facts = [
   {
     icon: Offline,
-    title: "Saved on your phone first",
-    body: "Each entry is written to your device right away, so ParkiWell keeps working without a connection.",
+    title: "Local record storage",
+    body: "Records are saved directly to your device and remain available without an internet connection.",
   },
   {
     icon: Lock,
-    title: "Sync is your choice",
+    title: "Optional synchronization",
     body: "An account is optional. Synced records travel over an encrypted connection and remain private to your account.",
   },
   {
     icon: Shield,
-    title: "Free from tracking",
+    title: "No advertising or tracking",
     body: "ParkiWell has no advertising or third party trackers. Health records are never sold to data brokers.",
   },
   {
     icon: Chart,
-    title: "Summaries stay local",
+    title: "On-device summaries",
     body: "Charts and pattern summaries are computed on your device from your own records.",
   },
 ];
@@ -49,29 +49,26 @@ export function Assurance() {
                 <Lock className="h-4 w-4" /> Chapter 02&nbsp; / &nbsp;Privacy
               </p>
               <h2 className="display mt-7 max-w-[8ch] text-[clamp(4rem,8vw,7.2rem)]">
-                Your data stays yours.
+                Your data.
+                <br />
+                Your control.
               </h2>
               <p className="mt-8 max-w-[34rem] text-[1.12rem] font-semibold leading-relaxed opacity-75 sm:text-[1.25rem]">
-                Health records are personal. ParkiWell stores yours on your
-                device, and syncing them anywhere else is always your choice.
+                ParkiWell stores health records on your device. Account creation
+                and synchronization are optional.
               </p>
-              <Link
-                href="/privacy"
-                className="group mt-9 inline-flex min-h-14 items-center gap-3 rounded-full bg-ink px-7 font-extrabold text-bg transition-transform duration-200 hover:-translate-y-1"
-              >
+              <Link href="/privacy" className="premium-button group mt-9">
                 Read the privacy policy
                 <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
             </div>
           </Reveal>
 
-          <ul className="grid gap-5 sm:grid-cols-2">
+          <ul className="grid gap-x-9 gap-y-3 sm:grid-cols-2">
             {facts.map(({ icon: Icon, title, body }, index) => (
               <Reveal as="li" key={title} delay={index * 0.07}>
-                <div
-                  className="min-h-[14rem] rounded-[1.5rem] border border-ink/15 bg-surface p-6 shadow-card transition-transform duration-500 hover:-translate-y-0.5 sm:p-7"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-ink/12 bg-bg">
+                <div className="assurance-fact">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/20 text-brand-strong">
                     <Icon className="h-6 w-6" />
                   </span>
                   <h3 className="mt-6 text-[1.45rem] font-extrabold leading-tight">

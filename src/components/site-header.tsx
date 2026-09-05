@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Close, Mark, Menu, Moon, Sun } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { nav, site } from "@/lib/site";
@@ -50,6 +56,7 @@ export function SiteHeader() {
     () => false,
   );
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   const toggleTheme = useCallback(() => {
     const next: Theme = readTheme() === "dark" ? "light" : "dark";
@@ -63,11 +70,30 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (!open) return;
+    const root = document.documentElement;
+    const previousOverflow = root.style.overflow;
+    const previousLock = root.dataset.scrollLocked;
+    root.style.overflow = "hidden";
+    root.dataset.scrollLocked = "true";
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
     };
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      root.style.overflow = previousOverflow;
+      if (previousLock === undefined) delete root.dataset.scrollLocked;
+      else root.dataset.scrollLocked = previousLock;
+      document.removeEventListener("keydown", onKey);
+      desktop.removeEventListener("change", closeOnDesktop);
+    };
   }, [open]);
 
   // The bar stays put. A header that hides and returns as you travel reads as
@@ -77,8 +103,8 @@ export function SiteHeader() {
     <header className="header-enter pointer-events-none fixed inset-x-0 top-3 z-40 sm:top-4">
       <Container>
         <div
-          className={`pointer-events-auto overflow-hidden rounded-[1.2rem] border border-ink/15 bg-bg-veil backdrop-blur-xl transition-shadow duration-500 ${
-            scrolled || open ? "shadow-raised" : "shadow-card"
+          className={`pointer-events-auto overflow-hidden ${open ? "rounded-[1.5rem]" : "rounded-full"} border border-ink/10 bg-bg-veil backdrop-blur-xl transition-shadow duration-500 ${
+            scrolled || open ? "shadow-card" : "shadow-none"
           }`}
         >
           <div className="flex h-[4.15rem] items-center justify-between gap-4 px-3 sm:px-4">
@@ -88,15 +114,18 @@ export function SiteHeader() {
               className="flex items-center gap-2.5 rounded-xl pr-2"
               aria-label={`${site.name} home`}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#12363a] shadow-card">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full text-ink">
                 <Mark className="h-7 w-7" />
               </span>
-              <span className="font-display text-[1.18rem] font-extrabold tracking-[-0.04em] text-ink">
+              <span className="font-display text-[1.18rem] font-bold tracking-[-0.045em] text-ink">
                 {site.name}
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+            <nav
+              className="hidden items-center gap-1 lg:flex"
+              aria-label="Primary"
+            >
               {[...nav, { href: "/#questions", label: "Questions" }].map(
                 (item) => (
                   <a
@@ -136,6 +165,7 @@ export function SiteHeader() {
               </a>
 
               <button
+                ref={menuButton}
                 type="button"
                 onClick={() => setOpen((value) => !value)}
                 aria-expanded={open}
@@ -152,7 +182,11 @@ export function SiteHeader() {
             </div>
           </div>
 
-          <div id="mobile-nav" hidden={!open} className="border-t border-line px-3 pb-3 lg:hidden">
+          <div
+            id="mobile-nav"
+            hidden={!open}
+            className="border-t border-line px-3 pb-3 lg:hidden"
+          >
             <nav className="flex flex-col pt-3" aria-label="Primary, mobile">
               {[
                 ...nav,
