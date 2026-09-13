@@ -17,7 +17,7 @@ import { Journey, steps } from "@/components/sections/journey";
 import { OrbitSculpture } from "@/components/ui/orbit-sculpture";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
 import { screens } from "@/lib/screens";
-import { stageHandover } from "@/lib/stages";
+import { screenTransition, stageHandover } from "@/lib/stages";
 import { JOURNEY_ENTER, JOURNEY_FINISH } from "@/lib/story";
 import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
@@ -33,63 +33,45 @@ const GLIDE = { from: 0.14, mid: 0.42, to: 0.7 } as const;
 const glideEase = cubicBezier(0.6, 0, 0.3, 1);
 
 /**
- * How a screen gives way to the next one. The incoming screen comes forward
- * out of a slight recess, fading in as it rises; the one beneath settles
- * back and darkens a little. No edge ever crosses the frame, which is what
- * made the earlier push read as a sheet rather than the app moving on.
- *
- * `reveal` runs over the whole handover, and the fade sits in the middle of
- * it: the screens are half and half at exactly the moment the copy beside the
- * phone is changing over and the rail moves on. The three read as one change.
+ * A small vertical drift carries the eye into the next screen. Each screen
+ * gets half of the full handover to fade, with no scale change and no doubled
+ * text. Copy, screen, and rail share the same scroll timing in both directions.
  */
 function useScreenPose(
   reveal: MotionValue<number>,
   covered: MotionValue<number>,
-  lift: number,
 ) {
-  const opacity = useTransform(reveal, [0.28, 0.72], [0, 1]);
-  const y = useTransform(reveal, (value) => `${(1 - value) * lift}%`);
-  const scale = useTransform(
-    [reveal, covered],
-    ([r, c]: number[]) => 0.965 + 0.035 * r - 0.04 * c,
+  const transition = useTransform([reveal, covered], ([r, c]: number[]) =>
+    screenTransition(r, c),
   );
-  const dim = useTransform(covered, [0, 1], [0, 0.16]);
-  return { opacity, y, scale, dim };
-}
-
-function Shade({ amount }: { amount: MotionValue<number> }) {
-  return (
-    <motion.div
-      aria-hidden="true"
-      style={{ opacity: amount }}
-      className="absolute inset-0 z-3 bg-[#12363a]"
-    />
+  const opacity = useTransform(transition, (value) => value.opacity);
+  const y = useTransform(transition, (value) => value.y);
+  const visibility = useTransform(opacity, (value) =>
+    value === 0 ? "hidden" : "visible",
   );
+  return { opacity, visibility, y };
 }
 
 /** The welcome screen: under everything, and covered as the tour arrives. */
 function WelcomeScreen({ arrival }: { arrival: MotionValue<number> }) {
   const shown = useTransform(() => 1);
-  const { scale, dim } = useScreenPose(shown, arrival, 0);
+  const pose = useScreenPose(shown, arrival);
 
   return (
-    <motion.div style={{ scale }} className="relative">
+    <motion.div data-phone-screen="welcome" style={pose} className="relative">
       <ThemedPhoneScreen
         screen={screens.welcome}
         alt="The ParkiWell welcome screen introducing daily care and guided recovery."
         priority
-        sizes="384px"
+        sizes="(max-width: 639px) 192px, (max-width: 1023px) 240px, 384px"
       />
-      <Shade amount={dim} />
     </motion.div>
   );
 }
 
 /**
- * One stop of the tour, laid over the stop before it. The first rides the
- * tour's arrival rather than a step boundary, so it lands as the tour's copy
- * does and the phone and the page change together; it also comes a little
- * further forward, because it is the moment the app opens.
+ * The first screen follows the tour's arrival. Later screens follow their
+ * stage handover. Every screen owns both its entrance and its exit.
  */
 function AppScreen({
   index,
@@ -109,16 +91,20 @@ function AppScreen({
       ? stageHandover(value, index + 1, steps.length)
       : 0,
   );
-  const { opacity, y, scale, dim } = useScreenPose(
-    reveal,
-    covered,
-    index === 0 ? 9 : 5,
-  );
+  const pose = useScreenPose(reveal, covered);
 
   return (
-    <motion.div style={{ opacity, y, scale }} className="absolute inset-0">
-      <ThemedPhoneScreen screen={step.screen} alt={step.alt} sizes="384px" />
-      <Shade amount={dim} />
+    <motion.div
+      data-phone-screen={step.label}
+      style={pose}
+      className="absolute inset-0"
+    >
+      <ThemedPhoneScreen
+        screen={step.screen}
+        alt={step.alt}
+        sizes="384px"
+        eager
+      />
     </motion.div>
   );
 }
@@ -196,7 +182,7 @@ function StoryDevice({
               style={{ rotateX: tiltX, rotateY: tiltY }}
             >
               <PhoneFrame>
-                <div className="relative">
+                <div className="relative bg-[#f1f4fb] dark:bg-[#070b15]">
                   <WelcomeScreen arrival={arrival} />
                   {steps.map((step, index) => (
                     <AppScreen

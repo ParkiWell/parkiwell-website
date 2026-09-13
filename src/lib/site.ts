@@ -1,8 +1,9 @@
 export const site = {
   name: "ParkiWell",
   tagline: "Daily Parkinson's care management",
+  title: "Parkinson's Symptom Tracker & Medication Reminders",
   description:
-    "ParkiWell combines symptom records, medication schedules, and guided speech and movement practice, with offline access and optional synchronization.",
+    "Track Parkinson's symptoms, organize medication reminders, and plan speech and movement practice with ParkiWell. Works offline. Coming to iPhone and Android.",
   url: "https://parkiwell.com",
   email: "jcscen@gmail.com",
   locale: "en_US",
@@ -10,6 +11,7 @@ export const site = {
 
 export const nav = [
   { href: "/#day", label: "Your day" },
+  { href: "/features", label: "Features" },
   { href: "/#privacy", label: "Privacy" },
 ] as const;
 

@@ -1,10 +1,15 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
+import {
+  motion,
+  useInView,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import { useRef } from "react";
 import { Camera, Lock } from "@/components/icons";
 import { Container } from "@/components/ui/container";
-import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
 /**
  * The arms lift and lower on a slow loop in CSS (see `.movement-arm`), not on
@@ -26,12 +31,20 @@ function MovementFigure() {
       <path d="M140 87v91M106 109h68M112 180h56" strokeWidth="3" />
       <path d="M114 180 102 239h50M166 180l12 59h-50" strokeWidth="3" />
       <g className="movement-arm movement-arm--left">
-        <path d="M106 109 91 196" strokeWidth="3" />
-        <circle cx="91" cy="196" r="5" fill="currentColor" stroke="none" />
+        <path d="M106 109 98 151" strokeWidth="3" />
+        <g className="movement-forearm movement-forearm--left">
+          <path d="M98 151 91 196" strokeWidth="3" />
+          <circle cx="91" cy="196" r="5" fill="currentColor" stroke="none" />
+        </g>
+        <circle cx="98" cy="151" r="4" fill="var(--surface)" strokeWidth="2" />
       </g>
       <g className="movement-arm movement-arm--right">
-        <path d="M174 109l15 87" strokeWidth="3" />
-        <circle cx="189" cy="196" r="5" fill="currentColor" stroke="none" />
+        <path d="M174 109 182 151" strokeWidth="3" />
+        <g className="movement-forearm movement-forearm--right">
+          <path d="M182 151 189 196" strokeWidth="3" />
+          <circle cx="189" cy="196" r="5" fill="currentColor" stroke="none" />
+        </g>
+        <circle cx="182" cy="151" r="4" fill="var(--surface)" strokeWidth="2" />
       </g>
       <g className="text-ink" fill="var(--surface)" strokeWidth="2">
         <circle cx="106" cy="109" r="5" />
@@ -48,20 +61,23 @@ function MovementFigure() {
 
 export function FutureMovementCoach() {
   const ref = useRef<HTMLElement>(null);
+  const scene = useRef<HTMLDivElement>(null);
+  const active = useInView(scene, { amount: 0.15 });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
-  // The only thing the scroll moves here is a slow turn of the stage, so it
-  // takes a heavier spring than the tour: each wheel notch eases it round
-  // rather than nudging it.
-  const progress = useSequenceProgress(scrollYProgress, 0.08, 0.8, {
-    stiffness: 70,
-    damping: 22,
+  // The stage follows a capped target without jumping at its boundaries.
+  // A fast scroll can finish its turn smoothly even after scrolling stops.
+  const turn = useTransform(scrollYProgress, [0.08, 0.8], [0, 1]);
+  const progress = useSpring(turn, {
+    stiffness: 60,
+    damping: 24,
+    restDelta: 0.0005,
   });
-  const rotateY = useTransform(progress, [0, 1], [-16, 8]);
-  const rotateX = useTransform(progress, [0, 1], [5, -2]);
-  const ringRotate = useTransform(progress, [0, 1], [0, 48]);
+  const rotateY = useTransform(progress, [0, 1], [-10, 6]);
+  const rotateX = useTransform(progress, [0, 1], [3, -1]);
+  const ringRotate = useTransform(progress, [0, 1], [0, 24]);
 
   return (
     <section
@@ -118,6 +134,8 @@ export function FutureMovementCoach() {
               </p>
             </div>
             <div
+              ref={scene}
+              data-active={active}
               className="movement-scene"
               role="img"
               aria-label="Illustration of a seated movement practice. The movement coach is in development."

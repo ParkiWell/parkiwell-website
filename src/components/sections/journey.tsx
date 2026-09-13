@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   motion,
   useMotionValueEvent,
@@ -26,6 +27,7 @@ export type Step = {
   title: string;
   body: string;
   feature: string;
+  href: string;
   screen: (typeof screens)[keyof typeof screens];
   alt: string;
   icon: typeof Heart;
@@ -35,6 +37,7 @@ export type Step = {
 export const steps: Step[] = [
   {
     label: "Symptom records",
+    href: "/features/symptom-tracking",
     title: "Review your symptoms",
     body: "View symptom and medication activity together, and record notes about changes you observe.",
     feature: "Symptom and medication records",
@@ -44,6 +47,7 @@ export const steps: Step[] = [
   },
   {
     label: "Medications",
+    href: "/features/medication-reminders",
     title: "Manage your medications",
     body: "Review your medication schedule and doses due today. Enable reminders as needed.",
     feature: "Medication schedules and reminders",
@@ -53,6 +57,7 @@ export const steps: Step[] = [
   },
   {
     label: "Guided practice",
+    href: "/features/speech-movement-practice",
     title: "Plan your practice",
     body: "Set weekly goals for speech and movement practice, view your next session, and review completed sessions.",
     feature: "Speech and movement sessions",
@@ -62,6 +67,7 @@ export const steps: Step[] = [
   },
   {
     label: "Support resources",
+    href: "/features#support-resources",
     title: "Access support resources",
     body: "The Community area collects research, educational videos, specialist directories, events, helplines, and daily living guides in one place.",
     feature: "Research, education, and support",
@@ -124,10 +130,10 @@ function StepPanel({
       <p className="mt-6 max-w-[26rem] text-[1.05rem] leading-relaxed text-muted xl:text-[1.1rem]">
         {item.body}
       </p>
-      <p className="journey-feature">
+      <Link href={item.href} className="journey-feature text-link">
         <item.icon className="h-4 w-4" />
         {item.feature}
-      </p>
+      </Link>
     </motion.article>
   );
 }
@@ -203,7 +209,7 @@ function StackedStep({ item, index }: { item: Step; index: number }) {
                 <ThemedPhoneScreen
                   screen={item.screen}
                   alt={item.alt}
-                  sizes="(max-width: 767px) 46vw, 240px"
+                  sizes="(max-width: 767px) 176px, 240px"
                 />
               </PhoneFrame>
             </div>
@@ -224,6 +230,12 @@ function StackedStep({ item, index }: { item: Step; index: number }) {
               <p className="mt-6 max-w-[34rem] text-[1.08rem] font-semibold leading-relaxed opacity-75">
                 {item.body}
               </p>
+              <Link
+                href={item.href}
+                className="text-link mt-5 inline-flex min-h-11 items-center text-sm font-bold"
+              >
+                {item.feature} <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </div>
           </div>
         </Reveal>
@@ -299,7 +311,10 @@ export function Journey({
   );
 
   return (
-    <section id="day" aria-label="Application features">
+    <section id="day" aria-labelledby="features-heading">
+      <h2 id="features-heading" className="sr-only">
+        Parkinson&rsquo;s care app features
+      </h2>
       {/*
         Which of the two layouts shows is decided in CSS, not here. Deciding it
         in JavaScript would mean the server and the client disagree about the

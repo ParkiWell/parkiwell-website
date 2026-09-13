@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import { Check, Mark } from "@/components/icons";
 import { LaunchList } from "@/components/launch-list";
@@ -9,7 +9,6 @@ import { OrbitSculpture } from "@/components/ui/orbit-sculpture";
 import { PhoneFrame, ThemedPhoneScreen } from "@/components/ui/phone";
 import { screens } from "@/lib/screens";
 import { useStillness } from "@/hooks/use-stillness";
-import { useSequenceProgress } from "@/hooks/use-sequence-progress";
 
 /**
  * The closing invitation.
@@ -19,31 +18,23 @@ import { useSequenceProgress } from "@/hooks/use-sequence-progress";
  * outer two spreading from behind the first. The chapter is one viewport
  * tall at rest and settles with its top at the top of the screen, so the
  * first line clears the header and the phones' edge is the bottom of the
- * screen. Reduced motion flattens the travel to nothing, so they are simply
- * already there.
+ * screen. The entrance runs once on a clock, so pausing or reversing a scroll
+ * cannot jerk the phones backwards. Reduced motion lands on the finished pose.
  */
 export function Closing() {
-  const ref = useRef<HTMLElement>(null);
+  const fan = useRef<HTMLDivElement>(null);
   const still = useStillness();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end end"],
+  // Observe the phone area, not the chapter's copy: an earlier trigger let
+  // the whole entrance finish below the viewport before anyone could see it.
+  const entered = useInView(fan, { once: true, amount: 0.38 });
+  const entrance = (delay: number) => ({
+    duration: still ? 0 : 1.1,
+    delay: still ? 0 : delay,
+    ease: [0.22, 0.68, 0, 1] as const,
   });
-  const progress = useSequenceProgress(scrollYProgress, 0.15, 0.85, {
-    stiffness: 90,
-    damping: 26,
-  });
-  const spread = useTransform(progress, (value) => (still ? 1 : value));
-  const rise = useTransform(spread, [0, 1], [110, 0]);
-  const sideRise = useTransform(spread, [0, 1], [150, 0]);
-  const leftX = useTransform(spread, [0, 1], ["0%", "-74%"]);
-  const rightX = useTransform(spread, [0, 1], ["0%", "74%"]);
-  const leftTurn = useTransform(spread, [0, 1], [0, -9]);
-  const rightTurn = useTransform(spread, [0, 1], [0, 9]);
 
   return (
     <section
-      ref={ref}
       id="get"
       data-chapter="get"
       className="chapter closing-chapter relative overflow-hidden text-ink"
@@ -75,12 +66,18 @@ export function Closing() {
         </div>
       </Container>
 
-      <div className="closing-fan">
+      <div ref={fan} className="closing-fan">
         <div className="closing-orbit" aria-hidden="true">
           <OrbitSculpture />
         </div>
         <motion.div
-          style={{ x: leftX, y: sideRise, rotateZ: leftTurn }}
+          initial={{ x: "-44%", y: 120, rotateZ: -3 }}
+          animate={
+            entered
+              ? { x: "-74%", y: 0, rotateZ: -9 }
+              : { x: "-44%", y: 120, rotateZ: -3 }
+          }
+          transition={entrance(0.08)}
           className="closing-phone closing-phone--left"
         >
           <PhoneFrame>
@@ -92,7 +89,9 @@ export function Closing() {
           </PhoneFrame>
         </motion.div>
         <motion.div
-          style={{ y: rise }}
+          initial={{ y: 96 }}
+          animate={{ y: entered ? 0 : 96 }}
+          transition={entrance(0)}
           className="closing-phone closing-phone--centre"
         >
           <PhoneFrame>
@@ -104,7 +103,13 @@ export function Closing() {
           </PhoneFrame>
         </motion.div>
         <motion.div
-          style={{ x: rightX, y: sideRise, rotateZ: rightTurn }}
+          initial={{ x: "44%", y: 120, rotateZ: 3 }}
+          animate={
+            entered
+              ? { x: "74%", y: 0, rotateZ: 9 }
+              : { x: "44%", y: 120, rotateZ: 3 }
+          }
+          transition={entrance(0.12)}
           className="closing-phone closing-phone--right"
         >
           <PhoneFrame>

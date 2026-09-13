@@ -1,11 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
-import { useId, useState } from "react";
 import { ArrowRight, ChevronDown } from "@/components/icons";
 import { Container } from "@/components/ui/container";
-import { useStillness } from "@/hooks/use-stillness";
 
 const questions = [
   {
@@ -37,13 +32,14 @@ const questions = [
     answer:
       "Open Profile, choose Settings, then choose Delete account. You can also email the ParkiWell team and ask for help.",
   },
+  {
+    question: "When can I download ParkiWell?",
+    answer:
+      "ParkiWell is coming to iPhone and Android. Join the launch list to receive an email when it is available to download. The movement coach is being developed for a future release.",
+  },
 ] as const;
 
 export function Faq() {
-  const [open, setOpen] = useState<number | null>(null);
-  const still = useStillness();
-  const baseId = useId();
-
   return (
     <section
       id="questions"
@@ -68,69 +64,41 @@ export function Faq() {
               Visit support
               <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
+            <Link
+              href="/features"
+              className="text-link mt-3 block w-fit py-2 text-sm font-bold"
+            >
+              Read the ParkiWell feature guide
+            </Link>
           </div>
-
           <div className="faq-questions border-t border-ink/20">
-            {questions.map((item, index) => {
-              const isOpen = open === index;
-              const panelId = `${baseId}-panel-${index}`;
-              const buttonId = `${baseId}-button-${index}`;
-
-              return (
-                <div key={item.question} className="border-b border-ink/15">
-                  <button
-                    id={buttonId}
-                    type="button"
-                    aria-expanded={isOpen}
-                    aria-controls={panelId}
-                    onClick={() => setOpen(isOpen ? null : index)}
-                    className="group flex w-full items-center justify-between gap-6 py-6 text-left sm:py-7"
-                  >
-                    <span className="flex items-start gap-4 sm:gap-6">
-                      <span className="numeral mt-1 text-sm text-ink">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="font-display text-[1.15rem] font-medium leading-snug tracking-[-0.025em] sm:text-[1.3rem]">
-                        {item.question}
-                      </span>
-                    </span>
+            {questions.map((item, index) => (
+              <details
+                key={item.question}
+                name="homepage-faq"
+                className="group border-b border-ink/15"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left sm:py-7">
+                  <span className="flex items-start gap-4 sm:gap-6">
                     <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/20 transition-colors duration-200 ${
-                        isOpen ? "bg-ink text-bg" : "group-hover:bg-surface-2"
-                      }`}
+                      aria-hidden="true"
+                      className="numeral mt-1 text-sm text-ink"
                     >
-                      <ChevronDown
-                        className={`h-5 w-5 transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        id={panelId}
-                        role="region"
-                        aria-labelledby={buttonId}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          duration: still ? 0 : 0.28,
-                          ease: [0.22, 0.61, 0.36, 1],
-                        }}
-                        className="overflow-hidden"
-                      >
-                        <p className="max-w-[43rem] pb-7 pl-10 pr-4 text-[1rem] font-normal leading-relaxed text-muted sm:pl-[4.6rem] sm:text-[1.08rem]">
-                          {item.answer}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
+                    <h3 className="font-display text-[1.15rem] font-medium leading-snug tracking-[-0.025em] sm:text-[1.3rem]">
+                      {item.question}
+                    </h3>
+                  </span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/20 transition-colors duration-200 group-hover:bg-surface-2 group-open:bg-ink group-open:text-bg">
+                    <ChevronDown className="h-5 w-5 transition-transform duration-300 group-open:rotate-180" />
+                  </span>
+                </summary>
+                <p className="max-w-[43rem] pb-7 pl-10 pr-4 text-[1rem] font-normal leading-relaxed text-muted sm:pl-[4.6rem] sm:text-[1.08rem]">
+                  {item.answer}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       </Container>

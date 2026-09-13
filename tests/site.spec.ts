@@ -1,7 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { tones } from "../src/lib/tones";
 
-const routes = ["/", "/support", "/privacy", "/terms"];
+const routes = [
+  "/",
+  "/features",
+  "/features/symptom-tracking",
+  "/features/medication-reminders",
+  "/features/speech-movement-practice",
+  "/support",
+  "/privacy",
+  "/terms",
+];
 
 async function collectConsoleErrors(page: Page) {
   const errors: string[] = [];
@@ -88,42 +97,49 @@ test("theme toggle switches and persists", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", after ?? "dark");
 });
 
-test("chapter screenshots are decoded before a theme switch", async ({
+test("phone images defer offscreen work and both themes load together", async ({
   page,
 }) => {
   await page.goto("/", { waitUntil: "networkidle" });
+  // The shared story phone preloads its layers to keep stage handovers smooth.
+  // Stacked and closing phones can wait until they approach the viewport.
+  await expect(page.locator('.story-device img[loading="eager"]')).toHaveCount(
+    10,
+  );
+  await expect(
+    page.locator('.journey-stacked img[loading="lazy"]'),
+  ).toHaveCount(8);
+  await expect(page.locator('.closing-fan img[loading="lazy"]')).toHaveCount(6);
 
-  // Screenshot filenames carry a content hash, so match the shape not a name.
-  // One in the hero, five in the story layer's phone, four in the stacked
-  // tour, and three in the closing fan.
-  const darkScreens = page.locator('img[src*="-dark-"][src*=".webp"]');
-  await expect(darkScreens).toHaveCount(13);
-
-  for (let index = 0; index < (await darkScreens.count()); index += 1) {
-    const screen = darkScreens.nth(index);
-    await expect(screen).toHaveAttribute("loading", "eager");
-    expect(
-      await screen.evaluate(
-        (image) =>
-          (image as HTMLImageElement).complete &&
-          (image as HTMLImageElement).naturalWidth > 0,
+  await page.locator("#get").scrollIntoViewIfNeeded();
+  const closingImages = page.locator(".closing-fan img");
+  await expect
+    .poll(() =>
+      closingImages.evaluateAll((images) =>
+        images.every(
+          (image) =>
+            (image as HTMLImageElement).complete &&
+            (image as HTMLImageElement).naturalWidth > 0,
+        ),
       ),
-    ).toBe(true);
-  }
+    )
+    .toBe(true);
+  await page.getByRole("button", { name: /Use (light|dark) theme/ }).click();
+  await expect(page.locator(".closing-fan")).toBeVisible();
 });
 
 test("questions start collapsed and open on request", async ({ page }) => {
   await page.goto("/#questions");
-  const firstQuestion = page.getByRole("button", {
-    name: "Can I use ParkiWell without a connection?",
-  });
-
-  await expect(firstQuestion).toHaveAttribute("aria-expanded", "false");
-  await firstQuestion.click();
-  await expect(firstQuestion).toHaveAttribute("aria-expanded", "true");
-  await expect(
-    page.getByText("Records live on your device and stay available offline."),
-  ).toBeVisible();
+  const question = page
+    .locator("#questions details")
+    .filter({ hasText: "Can I use ParkiWell without a connection?" });
+  await expect(question).not.toHaveAttribute("open");
+  await question.locator("summary").click();
+  await expect(question).toHaveAttribute("open", "");
+  await expect(question.locator("p")).toContainText(
+    "Records live on your device and stay available offline.",
+  );
+  await expect(question.locator("p")).toBeVisible();
 });
 
 // Mobile Safari does not move focus to links on Tab, so this is a desktop check.

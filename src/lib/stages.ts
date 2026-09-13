@@ -74,6 +74,20 @@ export function stageHandover(progress: number, index: number, total: number) {
   );
 }
 
+/**
+ * A screen drifts and fades through the canvas at the shared handover midpoint.
+ * The outgoing image reaches zero before the incoming one appears, so small
+ * text from two screenshots is never composited on top of itself.
+ */
+export function screenTransition(entering: number, leaving: number) {
+  const arrive = smooth((entering - 0.5) * 2);
+  const depart = smooth(leaving * 2);
+  return {
+    opacity: Math.min(arrive, 1 - depart),
+    y: 12 * (1 - arrive) - 8 * depart,
+  };
+}
+
 /** Vertical offset that matches the presence curve: in from below, out upward. */
 export function stageOffset(
   progress: number,

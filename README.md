@@ -37,8 +37,7 @@ Parkinson's care companion for iPhone and Android.
   never talks to the database; the server writes the row. The key it uses can
   add an address and cannot read the list back.
 - **Fast by default.** Every page is prerendered, screenshots are served
-  immutable, and the whole thing is a single origin with no client side
-  routing to wait for.
+  immutable, and browser assets all come from one origin.
 
 Read the [Privacy Policy](https://parkiwell.com/privacy), the
 [Terms of Service](https://parkiwell.com/terms), or visit
@@ -79,3 +78,6 @@ The launch list needs `supabase/launch_list.sql` applied to the project and
 `SUPABASE_URL` and `SUPABASE_ANON_KEY` set; see [.env.example](.env.example).
 Without them the form says it is unavailable rather than pretending to have
 saved anything.
+
+See [the search visibility guide](docs/seo.md) for page metadata, feature
+content, share artwork, sitemap maintenance, and Search Console setup.

@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/container";
 import { legalNotice, site } from "@/lib/site";
 
 const links = [
+  { href: "/features", label: "App features" },
   { href: "/support", label: "Support" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },

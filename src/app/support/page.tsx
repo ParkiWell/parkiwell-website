@@ -1,16 +1,15 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Lock, Shield } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Support",
-  description:
-    "Get help with ParkiWell: contact the team, make a privacy or deletion request, and read answers to the questions people ask most.",
-  alternates: { canonical: "/support" },
-};
+export const metadata = pageMetadata(
+  "App Support & Account Help",
+  "Get help with ParkiWell: contact the team, make a privacy or deletion request, and read answers to the questions people ask most.",
+  "/support",
+);
 
 const topics = [
   {
@@ -86,7 +85,7 @@ export default function SupportPage() {
               Support
             </p>
             <h1 className="text-[2.25rem] font-bold leading-tight sm:text-[2.75rem]">
-              We are glad to help
+              ParkiWell app support
             </h1>
             <p className="measure mt-5 text-[1.0625rem] text-muted">
               Questions, problems, feedback, account requests, privacy

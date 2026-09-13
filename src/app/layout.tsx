@@ -25,38 +25,11 @@ const nunito = Nunito_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} | ${site.tagline}`,
+    default: `${site.title} | ${site.name}`,
     template: `%s | ${site.name}`,
   },
   description: site.description,
   applicationName: site.name,
-  keywords: [
-    "Parkinson's",
-    "symptom tracker",
-    "medication reminders",
-    "speech practice",
-    "movement practice",
-    "offline",
-  ],
-  authors: [{ name: site.name }],
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    url: site.url,
-    siteName: site.name,
-    title: `${site.name} | ${site.tagline}`,
-    description: site.description,
-    locale: site.locale,
-    images: [
-      { url: "/brand/icon-512.png", width: 512, height: 512, alt: site.name },
-    ],
-  },
-  twitter: {
-    card: "summary",
-    title: `${site.name} | ${site.tagline}`,
-    description: site.description,
-    images: ["/brand/icon-512.png"],
-  },
   icons: {
     icon: [
       { url: "/brand/mark.svg", type: "image/svg+xml" },
@@ -64,7 +37,17 @@ export const metadata: Metadata = {
     ],
     apple: "/brand/apple-touch-icon.png",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
+  },
 };
 
 export const viewport: Viewport = {

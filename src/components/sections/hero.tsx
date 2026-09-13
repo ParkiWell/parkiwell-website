@@ -76,36 +76,14 @@ export function Hero({
               Parkinson&rsquo;s care management
             </motion.p>
             <h1 className="hero-title display">
-              <span className="block overflow-hidden pb-[0.12em]">
-                <motion.span
-                  className="block"
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
-                  transition={enter(0.18)}
-                >
-                  Daily care,
-                </motion.span>
-              </span>
-              <span className="block overflow-hidden pb-[0.14em]">
-                <motion.span
-                  className="block"
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
-                  transition={enter(0.3)}
-                >
-                  organized.
-                </motion.span>
-              </span>
+              <span className="block pb-[0.12em]">Parkinson&rsquo;s</span>
+              <span className="block pb-[0.14em]">care, organized.</span>
             </h1>
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={enter(0.45)}
-              className="hero-description mt-7 max-w-[30rem] text-lg leading-relaxed text-muted"
-            >
-              ParkiWell combines symptom records, medication schedules, and
-              guided speech and movement practice in one application.
-            </motion.p>
+            <p className="hero-description mt-7 max-w-[30rem] text-lg leading-relaxed text-muted">
+              Track symptoms, organize medication reminders, and plan guided
+              speech and movement practice with ParkiWell, a Parkinson&rsquo;s
+              care app for iPhone and Android.
+            </p>
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,7 +136,7 @@ export function Hero({
                     screen={screens.welcome}
                     alt="The ParkiWell welcome screen introducing daily care and guided recovery."
                     priority
-                    sizes="(max-width: 639px) 240px, 340px"
+                    sizes="(max-width: 639px) 192px, (max-width: 1023px) 240px, 384px"
                   />
                 </PhoneFrame>
               </div>

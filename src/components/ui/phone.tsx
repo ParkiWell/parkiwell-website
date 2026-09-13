@@ -54,7 +54,9 @@ export function PhoneScreen({
       width={680}
       height={1477}
       loading={eager ? "eager" : "lazy"}
-      fetchPriority={urgent ? "high" : undefined}
+      // Eager tour layers should decode early without React preloading them
+      // ahead of the stylesheet, fonts, and actual hero image.
+      fetchPriority={urgent ? "high" : "low"}
       sizes={sizes}
       className={`block h-auto w-full ${className}`}
     />
@@ -66,19 +68,22 @@ export function PhoneScreen({
  *
  * The theme lives in a `data-theme` attribute the visitor can toggle rather
  * than in a media query a `<picture>` could switch on. Both local files load
- * eagerly and occupy the same pixels, so a theme change crossfades between
+ * together as the phone approaches the viewport and occupy the same pixels,
+ * so a theme change crossfades between
  * decoded images without exposing the phone canvas underneath.
  */
 export function ThemedPhoneScreen({
   screen,
   alt,
   priority = false,
+  eager = priority,
   sizes,
   className = "",
 }: {
   screen: Screen;
   alt: string;
   priority?: boolean;
+  eager?: boolean;
   sizes?: string;
   className?: string;
 }) {
@@ -88,7 +93,7 @@ export function ThemedPhoneScreen({
         <PhoneScreen
           src={screen.light}
           alt={alt}
-          eager
+          eager={eager}
           urgent={priority}
           sizes={sizes}
           className={className}
@@ -101,7 +106,7 @@ export function ThemedPhoneScreen({
         <PhoneScreen
           src={screen.dark}
           alt=""
-          eager
+          eager={eager}
           urgent={priority}
           sizes={sizes}
           className={className}
