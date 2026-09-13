@@ -6,8 +6,9 @@ import "server-only";
  * The browser never talks to Supabase. It posts to this origin, the server adds
  * the key, and the row goes in from there. That keeps the site's promise that
  * it makes no third party requests literally true, and it keeps the key out of
- * the bundle. The key is the anon one either way, and the policies in
- * `supabase/launch_list.sql` let that role insert and nothing else.
+ * the bundle. The key is the anon one either way, in its legacy JWT form or
+ * the newer publishable form, and the policies in `supabase/launch_list.sql`
+ * let that role insert and nothing else.
  */
 
 export type Outcome =
@@ -71,23 +72,29 @@ export async function addToLaunchList(email: string): Promise<Outcome> {
   const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
+    const headers: Record<string, string> = {
+      apikey: key,
+      "content-type": "application/json",
+      // Nothing needs to come back.
+      //
+      // Notably absent: `resolution=ignore-duplicates`. That would be the
+      // tidy way to let a repeat signup pass, but it compiles to ON CONFLICT,
+      // which Postgres will only run for a role that can also SELECT the
+      // table. Buying it would mean granting the anon role read access to the
+      // whole launch list and leaning on row level security alone to take it
+      // back. The duplicate is handled below instead, and the key stays
+      // able to do exactly one thing.
+      prefer: "return=minimal",
+    };
+    // A legacy anon key is a JWT, and PostgREST reads the role out of it, so
+    // it travels as the bearer token too. A publishable key (sb_publishable_)
+    // is not a JWT. Supabase documents it as unsupported in the Authorization
+    // header and reads the role from the apikey header, so it goes there only.
+    if (!key.startsWith("sb_")) headers.authorization = `Bearer ${key}`;
+
     const response = await fetch(`${url.replace(/\/+$/, "")}${ENDPOINT}`, {
       method: "POST",
-      headers: {
-        apikey: key,
-        authorization: `Bearer ${key}`,
-        "content-type": "application/json",
-        // Nothing needs to come back.
-        //
-        // Notably absent: `resolution=ignore-duplicates`. That would be the
-        // tidy way to let a repeat signup pass, but it compiles to ON CONFLICT,
-        // which Postgres will only run for a role that can also SELECT the
-        // table. Buying it would mean granting the anon role read access to the
-        // whole launch list and leaning on row level security alone to take it
-        // back. The duplicate is handled below instead, and the key stays
-        // able to do exactly one thing.
-        prefer: "return=minimal",
-      },
+      headers,
       body: JSON.stringify({ email, source: "site" }),
       signal: controller.signal,
       cache: "no-store",

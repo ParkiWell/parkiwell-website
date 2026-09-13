@@ -17,12 +17,12 @@ Parkinson's care companion for iPhone and Android.
 
 <!-- site-shots:start -->
 <p align="center">
-  <img src="docs/site/hero-d051e4c8.webp" alt="The opening: your day, in rhythm" width="88%">
+  <img src="docs/site/hero-21c12183.webp" alt="The opening: your day, in rhythm" width="88%">
 </p>
 <p align="center">
-  <img src="docs/site/day-d3ab3b75.webp" alt="The pinned day sequence" width="29%">
-  <img src="docs/site/privacy-1b722f96.webp" alt="The privacy chapter, in dark mode" width="29%">
-  <img src="docs/site/launch-e1e372d4.webp" alt="The launch list at the end of the page" width="29%">
+  <img src="docs/site/day-aa0aa9e1.webp" alt="The pinned day sequence" width="29%">
+  <img src="docs/site/privacy-6a824ab7.webp" alt="The privacy chapter, in dark mode" width="29%">
+  <img src="docs/site/launch-d3e82f3c.webp" alt="The launch list at the end of the page" width="29%">
 </p>
 <!-- site-shots:end -->
 
@@ -73,11 +73,3 @@ are of this site:
 node scripts/screens.mjs ../ParkiWell/marketing/raw   # app screens
 node scripts/readme-shots.mjs                         # this readme, needs a running server
 ```
-
-The launch list needs `supabase/launch_list.sql` applied to the project and
-`SUPABASE_URL` and `SUPABASE_ANON_KEY` set; see [.env.example](.env.example).
-Without them the form says it is unavailable rather than pretending to have
-saved anything.
-
-See [the search visibility guide](docs/seo.md) for page metadata, feature
-content, share artwork, sitemap maintenance, and Search Console setup.
